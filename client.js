@@ -41,3 +41,5 @@ function TotalBrightness(canvas) {
 				  imageData.data[i + 2]);
     }
 }
+
+console.log(threeParsecs.length);
