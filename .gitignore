@@ -60,3 +60,29 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+# Haskell stuff
+server/dist
+server/cabal.sandbox.config
+server/.cabal-sandbox
+server/.cabal-sandbox/bin/
+server/.cabal-sandbox/share/
+server/.cabal-sandbox/lib/
+server/.cabal-sandbox/logs/
+server/.cabal-sandbox/x86_64-linux-ghc-7.10.3-packages.conf.d/
+stardata/dist
+stardata/cabal.sandbox.config
+stardata/.cabal-sandbox
+stardata/.cabal-sandbox/bin/
+stardata/.cabal-sandbox/share/
+stardata/.cabal-sandbox/lib/
+stardata/.cabal-sandbox/logs/
+stardata/.cabal-sandbox/x86_64-linux-ghc-7.10.3-packages.conf.d/
+abbreviator/dist
+abbreviator/cabal.sandbox.config
+abbreviator/.cabal-sandbox
+abbreviator/.cabal-sandbox/bin/
+abbreviator/.cabal-sandbox/share/
+abbreviator/.cabal-sandbox/lib/
+abbreviator/.cabal-sandbox/logs/
+abbreviator/.cabal-sandbox/x86_64-linux-ghc-7.10.3-packages.conf.d/
