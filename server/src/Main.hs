@@ -30,4 +30,4 @@ main = do
      let starTree = fromList dataList
      in do
        writeJSInterface scriptDir
-       run 8081 (starServerApp starTree staticDir)
+       run 80 (starServerApp starTree staticDir)
