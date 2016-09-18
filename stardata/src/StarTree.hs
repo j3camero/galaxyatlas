@@ -19,7 +19,7 @@ magicFormula viewDist blurRad =
       c     = sigmoid (-3.065390091 * a + 1.851112427)
   in
    (b + 1.872968808 * c * (1.0 - c)) /
-   (viewDist * viewDist)
+   (4 * pi * viewDist * viewDist)
 
 -- Helper for magic formula
 sigmoid :: Double -> Double
@@ -364,7 +364,7 @@ hasVisibleStars pnt lum (Branch oct@(OctreeNode {})) =
       minDst  = max (cntrDst - octRad) 0
       mLum    = maxLum . branchMetaData $ oct
   in
-   (mLum / (minDst * minDst)) >= lum
+   (mLum / (4 * pi * minDst * minDst)) >= lum
 hasVisibleStars pnt lum (Leaf lf@(LeafNode meta stars)) =
   let bounds  = treeBounds meta
       cntr    = ((maxCoords bounds) + (minCoords bounds)) /
@@ -374,7 +374,7 @@ hasVisibleStars pnt lum (Leaf lf@(LeafNode meta stars)) =
       minDst  = max (cntrDst - lfRad) 0
       mLum    = maxLum meta
   in
-   (mLum / (minDst * minDst)) >= lum
+   (mLum / (4 * pi * minDst * minDst)) >= lum
 
 -- Tail recursive visibleStars search function
 visibleStarsTC :: (SD.StarData a) =>
@@ -397,7 +397,7 @@ visibleStarsTC pnt lum (t:ts) acc =
        let canSee star = let sPos = SD.positionVec star
                              dist = distV3 pnt sPos
                              slum = SD.starLum star
-                         in (slum / (dist * dist)) >= lum
+                         in (slum / (4 * pi * dist * dist)) >= lum
            newAcc = acc ++ (filter canSee stars)
        in
         visibleStarsTC pnt lum ts newAcc
