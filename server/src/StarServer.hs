@@ -75,7 +75,7 @@ type StarsAPI =
   :> Get '[JSON] [StarDataRec]
 
 type FilesAPI =
-  "static" :> Raw
+  Raw
 
 type StarMapAPI =
     StarsAPI :<|> FilesAPI
