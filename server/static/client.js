@@ -107,7 +107,7 @@ function doOneFrame() {
 	var sx = (canvas.width / 2) +
             (canvas.width / 2) * projected.x / projected.y;
 	var sy = (canvas.height / 2) +
-            (canvas.height / 2) * projected.z / projected.y;
+            (canvas.width / 2) * projected.z / projected.y;
         if (sx < 0 || sx > canvas.width) continue;
         if (sy < 0 || sy > canvas.height) continue;
 	var brightness = 255 * star.lum / projected.squaredLength();
