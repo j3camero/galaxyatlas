@@ -13,6 +13,11 @@ var lastRenderDirection = new Vector(0, 1, 0);
 var upDirection = new Vector(0, 0, 1);
 var keys = new Array();
 
+var fovTestStars = [{"sid":-1,"x":1.0,"y":1.0,"z":0.0,"lum":1.0,"r":0,"g":255,"b":0},
+                    {"sid":-2,"x":-1.0,"y":1.0,"z":0.0,"lum":1.0,"r":0,"g":255,"b":0},
+                    {"sid":-3,"x":0.0,"y":1.0,"z":1.0,"lum":1.0,"r":0,"g":255,"b":0},
+                    {"sid":-4,"x":0.0,"y":1.0,"z":-1.0,"lum":1.0,"r":0,"g":255,"b":0}]
+
 function initKeys() {
     for (var i = 0; i < 256; ++i) {
 	keys[i] = 0;
@@ -99,8 +104,10 @@ function doOneFrame() {
 	if (projected.y < 0.00001) {
 	    continue;
 	}
-	var sx = canvas.width / 2 + 300 * projected.x / projected.y;
-	var sy = canvas.height / 2 + 300 * projected.z / projected.y;
+	var sx = (canvas.width / 2) +
+            (canvas.width / 2) * projected.x / projected.y;
+	var sy = (canvas.height / 2) +
+            (canvas.height / 2) * projected.z / projected.y;
         if (sx < 0 || sx > canvas.width) continue;
         if (sy < 0 || sy > canvas.height) continue;
 	var brightness = 255 * star.lum / projected.squaredLength();
