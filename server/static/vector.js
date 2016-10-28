@@ -6,6 +6,10 @@ function Vector(x, y, z) {
     this.z = z;
 }
 
+Vector.prototype.print = function() {
+    return "X: "+this.x+" Y: "+this.y+" Z: "+this.z;
+}
+
 Vector.prototype.copyFrom = function(v) {
     this.x = v.x;
     this.y = v.y;
