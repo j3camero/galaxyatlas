@@ -4,7 +4,7 @@ EXEC_NAME = galaxyatlas
 
 CXX_FLAGS = --std=c++11 -Wall
 INC = -I/usr/include/eigen3
-LDFLAGS = -pthread
+LDFLAGS = -pthread -lm
 
 SRC = main.cc startree.cc
 

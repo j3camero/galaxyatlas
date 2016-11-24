@@ -43,7 +43,8 @@ public:
     bool isLeaf() const { return isLeaf_; }
     bool isRoot() const { return isRoot_; }
     const StarTree* parent() const { return parent_; }
-    const StarTree* branch(TreeDirection dir) { return branches_[dir]; }
+    const StarTree* branch(TreeDirection dir) const
+    { return branches_[dir]; }
     const vector<const Star*>& stars() const { return stars_; }
 
     uint64_t maxLeafSize() const { return maxLeafSize_; }
@@ -52,6 +53,7 @@ public:
     double sumLuminosity() const { return sumLuminosity_; }
     const Vector3d& averageColor() const { return averageColor_; }
 
+    const Vector3d& splitPoint() const { return splitPoint_; }
     const Vector3d& minTreeBounds() const { return treeBounds_[0]; }
     const Vector3d& maxTreeBounds() const { return treeBounds_[1]; }
 
@@ -65,7 +67,7 @@ public:
                                       const Vector3d& to);
 private:
     // Used when splitting nodes, has no valid bounds
-    StarTree(uint64_t maxLeafSize, Vector3d splitPoint, StarTree* parent);
+    StarTree(uint64_t maxLeafSize, StarTree* parent);
     
     // Adjust this tree's metadata to account for a new star
     void addStarMetadata(const Star* star);
@@ -117,6 +119,12 @@ private:
     // Rough radius of the starBounds
     double boundsRadius_;
 };
+
+// Get all stars within a given radius from a point
+void starsInRadius(const Vector3d point, double radius,
+                   vector<const StarTree*>& searchList,
+                   vector<const Star*>& starsFound);
+
 } // namespace StarTree
 
 #endif // STARTREE_H_
