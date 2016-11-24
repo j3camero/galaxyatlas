@@ -38,7 +38,8 @@ def ConvertStar(row):
     x = parsecs * math.sin(declination) * math.cos(right_ascension)
     y = parsecs * math.sin(declination) * math.sin(right_ascension)
     z = parsecs * math.cos(declination)
-    return designation, x, y, z, luminosity, '255,196,0'
+    assert abs(math.sqrt(x*x + y*y + z*z) - parsecs) < 0.0001
+    return designation, x, y, z, luminosity, '255,255,255'
 
 star_count = 0
 with open('tgas.csv', 'w') as output_file:
