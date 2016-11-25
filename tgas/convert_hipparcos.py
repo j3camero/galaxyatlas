@@ -13,7 +13,7 @@ def ParseStar(row):
     try:
         parallax = float(tokens[11])
     except:
-        parallax = -1
+        return None, None, None, None, None, None, None, None
     hour, minute, second = right_ascension.split(" ")
     dec_deg, dec_min, dec_sec = declination.split(" ")
     right_ascension = (float(hour) * 15 +
@@ -22,12 +22,10 @@ def ParseStar(row):
     declination = (float(dec_deg) +
                    float(dec_min) / 60 +
                    float(dec_sec) / 3600) * math.pi / 180
-    if parallax > 0:
-        parsecs = 1000.0 / parallax
-        absolute_magnitude = apparent_magnitude - 5 * (math.log10(parsecs) - 1)
-    else:
-        parsecs = 1000
-        absolute_magnitude = 0
+    if parallax < 0.000001:
+        return None, None, None, None, None, None, None, None
+    parsecs = 1000.0 / parallax
+    absolute_magnitude = apparent_magnitude - 5 * (math.log10(parsecs) - 1)
     x = parsecs * math.sin(declination) * math.cos(right_ascension)
     y = parsecs * math.sin(declination) * math.sin(right_ascension)
     z = parsecs * math.cos(declination)

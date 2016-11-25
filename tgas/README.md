@@ -4,7 +4,9 @@ Release #1.
 
 These are tools for dealing with the TGAS dataset.
 
+```bash
 sh download_tgas.sh
 python convert_stars.py
 python convert_hipparcos.py
 python merge_tgas_and_hipparcos.py
+```

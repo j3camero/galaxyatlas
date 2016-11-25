@@ -22,15 +22,11 @@ with open(output_csv_filename, 'w') as f:
     pass
 
 # Write the TGAS stars, removing any stars that overlap from Hipparcos.
-WriteOneStar(['THC', 'designation', 'x', 'y', 'z',
-              'absmag', 'red', 'green', 'blue'])
-star_count = 1
+WriteOneStar(['designation', 'x', 'y', 'z', 'absmag', 'red', 'green', 'blue'])
 with open('tgas.csv') as input_file:
     input_file.readline()  # Skip csv headers.
     reader = csv.reader(input_file)
     for row in reader:
-        row.insert(0, star_count)
-        star_count += 1
         WriteOneStar(row)
         if reader.line_num % 100000 == 0:
             sys.stdout.write('.')
@@ -42,8 +38,6 @@ with open('tgas.csv') as input_file:
 # overlapping with TGAS.
 for hip in hipparcos:
     row = hipparcos[hip]
-    row.insert(0, star_count)
-    star_count += 1
     WriteOneStar(row)
 
 print ''
