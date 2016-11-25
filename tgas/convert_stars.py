@@ -39,14 +39,11 @@ def ConvertStar(row):
     y = parsecs * math.sin(declination) * math.sin(right_ascension)
     z = parsecs * math.cos(declination)
     assert abs(math.sqrt(x*x + y*y + z*z) - parsecs) < 0.0001
-    if hip.strip() == '17350':
-        print right_ascension, declination, parsecs
     return designation, x, y, z, luminosity, 255, 255, 255
 
-star_count = 0
 with open('tgas.csv', 'w') as output_file:
     writer = csv.writer(output_file)
-    writer.writerow(['mjid', 'designation', 'x', 'y', 'z',
+    writer.writerow(['designation', 'x', 'y', 'z',
                      'luminosity', 'red', 'green', 'blue'])
     for i in range(16):
         input_shard_filename = 'TgasSource_000-000-' + str(i).zfill(3) + '.csv'
@@ -54,10 +51,9 @@ with open('tgas.csv', 'w') as output_file:
         with open(input_shard_filename) as input_file:
             reader = csv.DictReader(input_file)
             for row in reader:
-                star_count += 1
                 designation, x, y, z, luminosity, r, g, b = ConvertStar(row)
                 if not designation:
                     continue
-                writer.writerow([star_count, designation,
+                writer.writerow([designation,
                                  '%.2f' % x, '%.2f' % y, '%.2f' % z,
                                  '%.2f' % luminosity, r, g, b])

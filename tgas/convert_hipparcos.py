@@ -33,22 +33,18 @@ def ParseStar(row):
     x = parsecs * math.sin(declination) * math.cos(right_ascension)
     y = parsecs * math.sin(declination) * math.sin(right_ascension)
     z = parsecs * math.cos(declination)
-    if designation == 'HIP 17350':
-        print right_ascension, declination, parsecs
     return designation, x, y, z, luminosity, 255, 255, 255
 
-star_count = 0
 with open('hipparcos.csv', 'w') as output_file:
     writer = csv.writer(output_file)
-    writer.writerow(['mjid', 'designation', 'x', 'y', 'z',
+    writer.writerow(['designation', 'x', 'y', 'z',
                      'luminosity', 'red', 'green', 'blue'])
     with open('hip_main.dat') as input_file:
         for row in input_file:
             row = row.strip()
-            star_count += 1
             designation, x, y, z, luminosity, r, g, b = ParseStar(row)
             if not designation:
                 continue
-            writer.writerow([star_count, designation,
+            writer.writerow([designation,
                              '%.2f' % x, '%.2f' % y, '%.2f' % z,
                              '%.2f' % luminosity, r, g, b])
