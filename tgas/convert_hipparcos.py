@@ -28,23 +28,21 @@ def ParseStar(row):
     else:
         parsecs = 1000
         absolute_magnitude = 0
-    luminosity = math.pow(2.512, -absolute_magnitude)
-    #luminosity = max(0, 10 - absolute_magnitude)
     x = parsecs * math.sin(declination) * math.cos(right_ascension)
     y = parsecs * math.sin(declination) * math.sin(right_ascension)
     z = parsecs * math.cos(declination)
-    return designation, x, y, z, luminosity, 255, 255, 255
+    return designation, x, y, z, absolute_magnitude, 255, 255, 255
 
 with open('hipparcos.csv', 'w') as output_file:
     writer = csv.writer(output_file)
     writer.writerow(['designation', 'x', 'y', 'z',
-                     'luminosity', 'red', 'green', 'blue'])
+                     'absmag', 'red', 'green', 'blue'])
     with open('hip_main.dat') as input_file:
         for row in input_file:
             row = row.strip()
-            designation, x, y, z, luminosity, r, g, b = ParseStar(row)
+            designation, x, y, z, absmag, r, g, b = ParseStar(row)
             if not designation:
                 continue
             writer.writerow([designation,
-                             '%.2f' % x, '%.2f' % y, '%.2f' % z,
-                             '%.2f' % luminosity, r, g, b])
+                             '%.8f' % x, '%.8f' % y, '%.8f' % z,
+                             '%.2f' % absmag, r, g, b])

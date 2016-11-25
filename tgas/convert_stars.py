@@ -32,28 +32,25 @@ def ConvertStar(row):
         return None, None, None, None, None, None, None, None
     parsecs = 1000.0 / parallax
     absolute_magnitude = apparent_magnitude - 5 * (math.log10(parsecs) - 1)
-    luminosity = math.pow(2.512, -absolute_magnitude)
-    #luminosity = max(0, 10 - absolute_magnitude)
-    #declination += math.pi / 2
     x = parsecs * math.sin(declination) * math.cos(right_ascension)
     y = parsecs * math.sin(declination) * math.sin(right_ascension)
     z = parsecs * math.cos(declination)
     assert abs(math.sqrt(x*x + y*y + z*z) - parsecs) < 0.0001
-    return designation, x, y, z, luminosity, 255, 255, 255
+    return designation, x, y, z, absolute_magnitude, 255, 255, 255
 
 with open('tgas.csv', 'w') as output_file:
     writer = csv.writer(output_file)
     writer.writerow(['designation', 'x', 'y', 'z',
-                     'luminosity', 'red', 'green', 'blue'])
+                     'absmag', 'red', 'green', 'blue'])
     for i in range(16):
         input_shard_filename = 'TgasSource_000-000-' + str(i).zfill(3) + '.csv'
         print 'Crunching', input_shard_filename
         with open(input_shard_filename) as input_file:
             reader = csv.DictReader(input_file)
             for row in reader:
-                designation, x, y, z, luminosity, r, g, b = ConvertStar(row)
+                designation, x, y, z, absmag, r, g, b = ConvertStar(row)
                 if not designation:
                     continue
                 writer.writerow([designation,
-                                 '%.2f' % x, '%.2f' % y, '%.2f' % z,
-                                 '%.2f' % luminosity, r, g, b])
+                                 '%.8f' % x, '%.8f' % y, '%.8f' % z,
+                                 '%.2f' % absmag, r, g, b])
