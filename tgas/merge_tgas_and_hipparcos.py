@@ -23,7 +23,7 @@ with open(output_csv_filename, 'w') as f:
 
 # Write the TGAS stars, removing any stars that overlap from Hipparcos.
 WriteOneStar(['THC', 'designation', 'x', 'y', 'z',
-              'luminosity', 'red', 'green', 'blue'])
+              'absmag', 'red', 'green', 'blue'])
 star_count = 1
 with open('tgas.csv') as input_file:
     input_file.readline()  # Skip csv headers.
