@@ -121,9 +121,20 @@ private:
 };
 
 // Get all stars within a given radius from a point
-void starsInRadius(const Vector3d point, double radius,
+void starsInRadius(const Vector3d& point, double radius,
                    vector<const StarTree*>& searchList,
                    vector<const Star*>& starsFound);
+
+// Get all stars that would be individually visible from the given point
+void visibleStars(const Vector3d& point, double minLuminosity,
+                  vector<const StarTree*>& searchList,
+                  vector<const Star*>& starsFound);
+
+// Get all stars that match the magic formula
+void visibleStarsMagic(const Vector3d& point, double minLuminosity,
+                       double blurRadius,
+                       vector<const StarTree*>& searchList,
+                       vector<const Star*>& starsFound);
 
 } // namespace StarTree
 

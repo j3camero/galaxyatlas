@@ -201,14 +201,14 @@ static double getDistance(const Vector3d& pointA,
 // Check if an octant approximately intersects the given sphere
 static bool octantApproxIntersect(const Vector3d& point, double radius,
                                   const StarTree* t) {
-    double centerDistance = getDistance(point, t->splitPoint());
-    double subRadius = getDistance(t->splitPoint(),
-                                   t->maxTreeBounds());
+    const double centerDistance = getDistance(point, t->splitPoint());
+    const double subRadius = getDistance(t->splitPoint(),
+                                         t->maxTreeBounds());
     return (radius + subRadius) >= centerDistance;
 }
 
 // Get all stars within a given radius from a point
-void starsInRadius(const Vector3d point, double radius,
+void starsInRadius(const Vector3d& point, double radius,
                    vector<const StarTree*>& searchList,
                    vector<const Star*>& starsFound) {
     // Base case: no subtrees left to search
@@ -226,7 +226,7 @@ void starsInRadius(const Vector3d point, double radius,
             for (unsigned int i = 0; i < t->numStars(); i++) {
                 if (getDistance(point, (t->stars()[i])->position()) <=
                     radius) {
-                    starsFound.push_back((t->stars())[i]);
+                    starsFound.push_back(t->stars()[i]);
                 }
             }
         } else {
@@ -241,5 +241,126 @@ void starsInRadius(const Vector3d point, double radius,
 
     // Recurse
     return starsInRadius(point, radius, searchList, starsFound);
+}
+
+static bool canSeeStar(const Vector3d& point, double minLum,
+                       const Star* star) {
+    const Vector3d& starPosition = star->position();
+    const double starDistance = getDistance(point, starPosition);
+    const double starLuminosity = star->lum();
+
+    return (starLuminosity /
+            (4 * M_PI * starDistance * starDistance)) >= minLum;
+}
+
+static bool hasVisibleStars(const Vector3d& point, double minLum,
+                            const StarTree* t) {
+    const double centerDistance = getDistance(point, t->splitPoint());
+    const double subRadius = getDistance(t->splitPoint(),
+                                         t->maxTreeBounds());
+    const double minDistance = fmax((centerDistance - subRadius), 0);
+
+    return (t->maxLuminosity() /
+            (4 * M_PI * minDistance * minDistance)) >= minLum;
+}
+
+void visibleStars(const Vector3d& point, double minLuminosity,
+                  vector<const StarTree*>& searchList,
+                  vector<const Star*>& starsFound) {
+    // Base case: no subtrees left to search
+    if (searchList.size() == 0)
+        return;
+
+    // Look at the first thing on the list
+    const StarTree* t = searchList[0];
+    searchList.erase(searchList.begin());
+
+    if (hasVisibleStars(point, minLuminosity, t)) {
+        if (t->isLeaf()) {
+            for (unsigned int i = 0; i < t->numStars(); i++) {
+                if (canSeeStar(point, minLuminosity, t->stars()[i])) {
+                    starsFound.push_back(t->stars()[i]);
+                }
+            }
+        } else {
+            for (int i = 0; i < 8; i++) {
+                const StarTree* tmp =
+                    t->branch(static_cast<TreeDirection>(i));
+                searchList.push_back(tmp);
+            }
+        }
+    }
+
+    return visibleStars(point, minLuminosity, searchList, starsFound);
+}
+
+static double sigmoid(double x) {
+    return 1.0 / (1.0 + exp(x));
+}
+
+static double magicFormula(double distance, double blurRadius) {
+    double a = log(distance) - log(blurRadius);
+    double b = sigmoid((-2.03935397) * a);
+    double c = sigmoid(-3.065390091 * a + 1.851112427);
+
+    return ( (b + 1.872968808 * c * (1.0 - c)) /
+             (4 * M_PI * distance * distance) );
+}
+
+static bool canSeeStarMagic(const Vector3d& point, double minLum,
+                            double blurRadius, const Star* star) {
+    const Vector3d& starPosition = star->position();
+    const double starDistance = getDistance(point, starPosition);
+    const double starLuminosity = star->lum();
+    const double magic =
+        magicFormula(starDistance, blurRadius) * starLuminosity;
+
+    return magic >= minLum;
+}
+
+static bool hasVisibleStarsMagic(const Vector3d& point, double minLum,
+                                 double blurRadius, const StarTree* t) {
+    const double centerDistance = getDistance(point, t->splitPoint());
+    const double subRadius = getDistance(t->splitPoint(),
+                                         t->maxTreeBounds());
+    const double minDistance = fmax((centerDistance - subRadius),
+                                    (4.84814e-7));
+    const double magic =
+        magicFormula(minDistance, blurRadius) * t->maxLuminosity();
+
+    return magic >= minLum;
+}
+
+void visibleStarsMagic(const Vector3d& point, double minLuminosity,
+                       double blurRadius,
+                       vector<const StarTree*>& searchList,
+                       vector<const Star*>& starsFound) {
+    // Base case: no subtrees left to search
+    if (searchList.size() == 0)
+        return;
+
+    // Look at the first thing on the list
+    const StarTree* t = searchList[0];
+    searchList.erase(searchList.begin());
+
+    if (hasVisibleStarsMagic(point, minLuminosity, blurRadius, t)) {
+        if (t->isLeaf()) {
+            for (unsigned int i = 0; i < t->numStars(); i++) {
+                if (canSeeStarMagic(point, minLuminosity, blurRadius,
+                                    t->stars()[i])) {
+                    starsFound.push_back(t->stars()[i]);
+                }
+            }
+        } else {
+            for (int i = 0; i < 8; i++) {
+                const StarTree* tmp =
+                    t->branch(static_cast<TreeDirection>(i));
+                searchList.push_back(tmp);
+            }
+        }
+    }
+
+    return visibleStarsMagic(point, minLuminosity, blurRadius,
+                             searchList, starsFound);
 }
 } // namespace StarTree

@@ -36,12 +36,5 @@ int main(int argc, char* argv[]) {
         tree.addStar(&(stars[i]));
     }
     
-    vector<const Star*> foundStars;
-    vector<const StarTree*> searchList;
-    searchList.push_back(&tree);
-    starsInRadius(Vector3d::Zero(), 2.0, searchList, foundStars);
-
-    cout << foundStars.size() << endl;
-    
     return 0;
 }
