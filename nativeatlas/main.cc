@@ -36,7 +36,7 @@ static void renderStar(Image& image,
     // Calculate RGBA
     //ColorRGB rgba(color.x()/255, color.y()/255, color.z()/255);
     //rgba.alpha(brightness);
-    const double A = 10000;
+    const double A = 50000;
 
     ColorRGB pxColor = image.pixelColor(sx, sy);
     pxColor.red(1.0);
@@ -57,18 +57,35 @@ int main(int argc, char* argv[]) {
     InitializeMagick(*argv);
 
     // Read CSV file and create Star objects
-    io::CSVReader<8> star_reader("data/hygdata_min3.csv");
-
-    uint64_t id;
+    //io::CSVReader<8> star_reader("data/hygdata_min3.csv");
+    io::CSVReader<8> star_reader("data/thc.csv");
+    
+    uint64_t id = 0;
+    string idstr;
     double x, y, z;
+    double absmag;
     double lum;
     double r, g, b;
 
-    vector<Star> stars;
-    while(star_reader.read_row(id, x, y, z, lum, r, g, b)) {
-        stars.push_back(Star(id, x, y , z, lum, r, g, b));
-    }
+    double minx,miny,minz,maxx,maxy,maxz;
 
+    vector<Star> stars;
+    while(star_reader.read_row(idstr, x, y, z, absmag, r, g, b)) {
+        minx = min(x, minx);
+        miny = min(y, miny);
+        minz = min(z, minz);
+        maxx = max(x, maxx);
+        maxy = max(y, maxy);
+        maxz = max(z, maxz);
+        lum = exp(-0.4 * (absmag - 4.85));
+        stars.push_back(Star(id++, x, y , z, lum, r, g, b));
+    }
+    cout << "Min x: " << minx << " Min y: " << miny << " Min z: " << minz
+         << endl
+         << "Max x: " << maxx << " Max y: " << maxy << " Max z: " << maxz
+         << endl;
+
+    /*
     // Put all the stars into the octree
     StarTree tree(kMaxLeafSize, Vector3d::Zero(),
                   Vector3d(-100000.0, -100000.0, -100000.0),
@@ -79,16 +96,15 @@ int main(int argc, char* argv[]) {
     }
 
     // Run a search for visible stars
-    /*
     vector<const StarTree*> searchList{&tree};
     vector<const Star*> foundStars;
     visibleStars(cameraPosition, 0.0001, searchList, foundStars);
     cout << foundStars.size() << endl;
     */
     
-    Vector3d cameraPosition(0, -2500.0, 0);
+    Vector3d cameraPosition(0, -2000, 0);
     Vector3d cameraDirection(0, 1, 0);
-    Vector3d upDirection(0, 0, 1);
+    Vector3d upDirection(-sqrt(2), 0, sqrt(2));
     Vector3d right = cameraDirection.cross(upDirection);
     
     // Background image (black)
