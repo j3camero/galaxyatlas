@@ -26,9 +26,9 @@ def ParseStar(row):
         return None, None, None, None, None, None, None, None
     parsecs = 1000.0 / parallax
     absolute_magnitude = apparent_magnitude - 5 * (math.log10(parsecs) - 1)
-    x = parsecs * math.sin(declination) * math.cos(right_ascension)
-    y = parsecs * math.sin(declination) * math.sin(right_ascension)
-    z = parsecs * math.cos(declination)
+    x = parsecs * math.cos(declination) * math.cos(right_ascension)
+    y = parsecs * math.cos(declination) * math.sin(right_ascension)
+    z = parsecs * math.sin(declination)
     return designation, x, y, z, absolute_magnitude, 255, 255, 255
 
 with open('hipparcos.csv', 'w') as output_file:
