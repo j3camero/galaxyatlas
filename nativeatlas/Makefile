@@ -9,12 +9,17 @@ LDFLAGS = -pthread -lm -lMagick++-6.Q16
 
 DEFINES = -DMAGICKCORE_QUANTUM_DEPTH=16 -DMAGICKCORE_HDRI_ENABLE=0
 
-SRC = main.cc startree.cc
+COMMON_SRC = startree.cc
+MAIN_SRC = main.cc $(COMMON_SRC)
+BRUTE_SRC = brute_force.cc $(COMMON_SRC)
 
 all: main
 
 main:
-	$(CXX) $(CXX_FLAGS) -o $(EXEC_NAME) $(SRC) $(INC) $(LDFLAGS) $(DEFINES)
+	$(CXX) $(CXX_FLAGS) -o $(EXEC_NAME) $(MAIN_SRC) $(INC) $(LDFLAGS) $(DEFINES)
+
+bruteforce:
+	$(CXX) $(CXX_FLAGS) -o bruteforce $(BRUTE_SRC) $(INC) $(LDFLAGS) $(DEFINES)
 
 clean:
-	rm -f galaxyatlas
+	rm -f galaxyatlas bruteforce
