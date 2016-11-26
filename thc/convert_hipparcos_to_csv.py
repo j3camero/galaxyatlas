@@ -13,7 +13,7 @@ def ParseStar(row):
     try:
         parallax = float(tokens[11])
     except:
-        parallax = -1
+        return None, None, None, None, None, None, None, None
     hour, minute, second = right_ascension.split(" ")
     dec_deg, dec_min, dec_sec = declination.split(" ")
     right_ascension = (float(hour) * 15 +
@@ -22,29 +22,25 @@ def ParseStar(row):
     declination = (float(dec_deg) +
                    float(dec_min) / 60 +
                    float(dec_sec) / 3600) * math.pi / 180
-    if parallax > 0:
-        parsecs = 1000.0 / parallax
-        absolute_magnitude = apparent_magnitude - 5 * (math.log10(parsecs) - 1)
-    else:
-        parsecs = 1000
-        absolute_magnitude = 0
-    luminosity = math.pow(2.512, -absolute_magnitude)
-    #luminosity = max(0, 10 - absolute_magnitude)
+    if parallax < 0.000001:
+        return None, None, None, None, None, None, None, None
+    parsecs = 1000.0 / parallax
+    absolute_magnitude = apparent_magnitude - 5 * (math.log10(parsecs) - 1)
     x = parsecs * math.sin(declination) * math.cos(right_ascension)
     y = parsecs * math.sin(declination) * math.sin(right_ascension)
     z = parsecs * math.cos(declination)
-    return designation, x, y, z, luminosity, 255, 255, 255
+    return designation, x, y, z, absolute_magnitude, 255, 255, 255
 
 with open('hipparcos.csv', 'w') as output_file:
     writer = csv.writer(output_file)
     writer.writerow(['designation', 'x', 'y', 'z',
-                     'luminosity', 'red', 'green', 'blue'])
+                     'absmag', 'red', 'green', 'blue'])
     with open('hip_main.dat') as input_file:
         for row in input_file:
             row = row.strip()
-            designation, x, y, z, luminosity, r, g, b = ParseStar(row)
+            designation, x, y, z, absmag, r, g, b = ParseStar(row)
             if not designation:
                 continue
             writer.writerow([designation,
-                             '%.2f' % x, '%.2f' % y, '%.2f' % z,
-                             '%.2f' % luminosity, r, g, b])
+                             '%.8f' % x, '%.8f' % y, '%.8f' % z,
+                             '%.2f' % absmag, r, g, b])
