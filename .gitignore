@@ -86,3 +86,16 @@ abbreviator/.cabal-sandbox/share/
 abbreviator/.cabal-sandbox/lib/
 abbreviator/.cabal-sandbox/logs/
 abbreviator/.cabal-sandbox/x86_64-linux-ghc-7.10.3-packages.conf.d/
+*.cabal-sandbox/*
+*cabal.sandbox.config
+
+# Mac files
+*.DS_Store
+
+# Emacs temp files
+*~
+\#*\#
+
+# Star data files.
+thc/*.csv
+thc/TgasSource_000-000-*.csv
