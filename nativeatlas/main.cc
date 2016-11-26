@@ -2,6 +2,7 @@
 #include <cassert>
 #include <Eigen/Dense>
 #include <Magick++.h>
+#include <chrono>
 
 #include "csv.h"
 
@@ -11,6 +12,7 @@ using namespace startree;
 using namespace Eigen;
 using namespace Magick;
 using namespace std;
+using namespace std::chrono;
 
 const uint32_t kMaxLeafSize = 8;
 
@@ -36,7 +38,7 @@ static void renderStar(Image& image,
     // Calculate RGBA
     //ColorRGB rgba(color.x()/255, color.y()/255, color.z()/255);
     //rgba.alpha(brightness);
-    const double A = 50000;
+    const double A = 1000;
 
     ColorRGB pxColor = image.pixelColor(sx, sy);
     pxColor.red(1.0);
@@ -57,6 +59,7 @@ int main(int argc, char* argv[]) {
     InitializeMagick(*argv);
 
     // Read CSV file and create Star objects
+    cout << "Reading CSV file..." << endl;
     //io::CSVReader<8> star_reader("data/hygdata_min3.csv");
     io::CSVReader<8> star_reader("data/thc.csv");
     
@@ -84,29 +87,34 @@ int main(int argc, char* argv[]) {
          << endl
          << "Max x: " << maxx << " Max y: " << maxy << " Max z: " << maxz
          << endl;
+    cout << "Done reading CSV file." << endl;
 
-    /*
+    cout << "Loading stars into tree..." << endl;
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
     // Put all the stars into the octree
     StarTree tree(kMaxLeafSize, Vector3d::Zero(),
-                  Vector3d(-100000.0, -100000.0, -100000.0),
-                  Vector3d( 100000.0,  100000.0,  100000.0));
+                  Vector3d(minx - 1.0, miny - 1.0, minz - 1.0),
+                  Vector3d(maxx + 1.0, maxy + 1.0, maxz + 1.0));
 
     for (unsigned int i = 0; i < stars.size(); i++) {
         tree.addStar(&(stars[i]));
     }
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    cout << "Done loading stars into tree." << endl;
 
-    // Run a search for visible stars
-    vector<const StarTree*> searchList{&tree};
-    vector<const Star*> foundStars;
-    visibleStars(cameraPosition, 0.0001, searchList, foundStars);
-    cout << foundStars.size() << endl;
-    */
-    
-    Vector3d cameraPosition(0, -2000, 0);
+    Vector3d cameraPosition(0, 0, 0);
     Vector3d cameraDirection(0, 1, 0);
-    Vector3d upDirection(-sqrt(2), 0, sqrt(2));
+    Vector3d upDirection(0, 0, 1);
     Vector3d right = cameraDirection.cross(upDirection);
     
+    // Run a search for visible stars    
+    cout << "Searching for visible stars..." << endl;
+    vector<const StarTree*> searchList{&tree};
+    vector<const Star*> foundStars;
+    visibleStars(cameraPosition, 0.000001, searchList, foundStars);
+    cout << "Found " << foundStars.size() << " visible stars." << endl;
+    
+    cout << "Rendering image..." << endl;
     // Background image (black)
     Image bgImage(Geometry(kImageWidth, kImageHeight), Color("black"));
     
@@ -119,10 +127,9 @@ int main(int argc, char* argv[]) {
     assert(((ColorRGB)(starImage.pixelColor(0,0))).blue() == 0.0);
     assert(starImage.pixelColor(0,0).alpha() == 1.0);
     
-//    for (vector<const Star*>::iterator it = foundStars.begin();
-//         it != foundStars.end(); ++it) {
-    for (vector<Star>::iterator star = stars.begin();
-         star != stars.end(); ++star) {
+    for (vector<const Star*>::iterator it = foundStars.begin();
+         it != foundStars.end(); ++it) {
+        const Star* star = *it;
         const Vector3d& position = star->position();
         const Vector3d translated = position - cameraPosition;
         const Vector3d projected = basisProjection(translated,
@@ -144,11 +151,12 @@ int main(int argc, char* argv[]) {
     }
 
     bgImage.composite(starImage, 0, 0, PlusCompositeOp);
-
-    cout << render_count << endl;
-    cout << overlap_count << endl;
+    cout << "Done rendering image." << endl;
+    cout << "Rendered " << render_count << " stars." << endl;
     
+    cout << "Writing image to disk..." << endl;
     bgImage.write("image.png");
+    cout << "Done writing image to disk." << endl;
     
     return 0;
 }

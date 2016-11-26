@@ -211,36 +211,32 @@ static bool octantApproxIntersect(const Vector3d& point, double radius,
 void starsInRadius(const Vector3d& point, double radius,
                    vector<const StarTree*>& searchList,
                    vector<const Star*>& starsFound) {
-    // Base case: no subtrees left to search
-    if (searchList.size() == 0)
-        return;
+    // Loop until the search list is empty
+    while (searchList.size() > 0) {
+        // Look at the first thing on the list
+        const StarTree* t = searchList[0];
+        searchList.erase(searchList.begin());
 
-    // Look at the first thing on the list
-    const StarTree* t = searchList[0];
-    searchList.erase(searchList.begin());
-
-    // Does this octant possibly intersect our sphere?
-    if (octantApproxIntersect(point, radius, t)) {
-        if (t->isLeaf()) {
-            // If it's a leaf check all the stars
-            for (unsigned int i = 0; i < t->numStars(); i++) {
-                if (getDistance(point, (t->stars()[i])->position()) <=
-                    radius) {
-                    starsFound.push_back(t->stars()[i]);
+        // Does this octant possibly intersect our sphere?
+        if (octantApproxIntersect(point, radius, t)) {
+            if (t->isLeaf()) {
+                // If it's a leaf check all the stars
+                for (unsigned int i = 0; i < t->numStars(); i++) {
+                    if (getDistance(point, (t->stars()[i])->position()) <=
+                        radius) {
+                        starsFound.push_back(t->stars()[i]);
+                    }
                 }
-            }
-        } else {
-            // If it's a branch, add all of the subnodes to be searched
-            for (int i = 0; i < 8; i++) {
-                const StarTree* tmp =
-                    t->branch(static_cast<TreeDirection>(i));
-                searchList.push_back(tmp);
+            } else {
+                // If it's a branch, add all of the subnodes to be searched
+                for (int i = 0; i < 8; i++) {
+                    const StarTree* tmp =
+                        t->branch(static_cast<TreeDirection>(i));
+                    searchList.push_back(tmp);
+                }
             }
         }
     }
-
-    // Recurse
-    return starsInRadius(point, radius, searchList, starsFound);
 }
 
 static bool canSeeStar(const Vector3d& point, double minLum,
@@ -267,31 +263,28 @@ static bool hasVisibleStars(const Vector3d& point, double minLum,
 void visibleStars(const Vector3d& point, double minLuminosity,
                   vector<const StarTree*>& searchList,
                   vector<const Star*>& starsFound) {
-    // Base case: no subtrees left to search
-    if (searchList.size() == 0)
-        return;
+    // Loop until the search list is empty
+    while (searchList.size() > 0) {
+        // Look at the first thing on the list
+        const StarTree* t = searchList[0];
+        searchList.erase(searchList.begin());
 
-    // Look at the first thing on the list
-    const StarTree* t = searchList[0];
-    searchList.erase(searchList.begin());
-
-    if (hasVisibleStars(point, minLuminosity, t)) {
-        if (t->isLeaf()) {
-            for (unsigned int i = 0; i < t->numStars(); i++) {
-                if (canSeeStar(point, minLuminosity, t->stars()[i])) {
-                    starsFound.push_back(t->stars()[i]);
+        if (hasVisibleStars(point, minLuminosity, t)) {
+            if (t->isLeaf()) {
+                for (unsigned int i = 0; i < t->numStars(); i++) {
+                    if (canSeeStar(point, minLuminosity, t->stars()[i])) {
+                        starsFound.push_back(t->stars()[i]);
+                    }
                 }
-            }
-        } else {
-            for (int i = 0; i < 8; i++) {
-                const StarTree* tmp =
-                    t->branch(static_cast<TreeDirection>(i));
-                searchList.push_back(tmp);
+            } else {
+                for (int i = 0; i < 8; i++) {
+                    const StarTree* tmp =
+                        t->branch(static_cast<TreeDirection>(i));
+                    searchList.push_back(tmp);
+                }
             }
         }
     }
-
-    return visibleStars(point, minLuminosity, searchList, starsFound);
 }
 
 static double sigmoid(double x) {
@@ -335,32 +328,28 @@ void visibleStarsMagic(const Vector3d& point, double minLuminosity,
                        double blurRadius,
                        vector<const StarTree*>& searchList,
                        vector<const Star*>& starsFound) {
-    // Base case: no subtrees left to search
-    if (searchList.size() == 0)
-        return;
-
-    // Look at the first thing on the list
-    const StarTree* t = searchList[0];
-    searchList.erase(searchList.begin());
-
-    if (hasVisibleStarsMagic(point, minLuminosity, blurRadius, t)) {
-        if (t->isLeaf()) {
-            for (unsigned int i = 0; i < t->numStars(); i++) {
-                if (canSeeStarMagic(point, minLuminosity, blurRadius,
-                                    t->stars()[i])) {
-                    starsFound.push_back(t->stars()[i]);
+    // Loop until the searchlist is empty
+    while (searchList.size() > 0) {
+        // Look at the first thing on the list
+        const StarTree* t = searchList[0];
+        searchList.erase(searchList.begin());
+        
+        if (hasVisibleStarsMagic(point, minLuminosity, blurRadius, t)) {
+            if (t->isLeaf()) {
+                for (unsigned int i = 0; i < t->numStars(); i++) {
+                    if (canSeeStarMagic(point, minLuminosity, blurRadius,
+                                        t->stars()[i])) {
+                        starsFound.push_back(t->stars()[i]);
+                    }
                 }
-            }
-        } else {
-            for (int i = 0; i < 8; i++) {
-                const StarTree* tmp =
-                    t->branch(static_cast<TreeDirection>(i));
-                searchList.push_back(tmp);
+            } else {
+                for (int i = 0; i < 8; i++) {
+                    const StarTree* tmp =
+                        t->branch(static_cast<TreeDirection>(i));
+                    searchList.push_back(tmp);
+                }
             }
         }
     }
-
-    return visibleStarsMagic(point, minLuminosity, blurRadius,
-                             searchList, starsFound);
 }
 } // namespace StarTree
