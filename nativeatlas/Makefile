@@ -2,10 +2,12 @@
 
 EXEC_NAME = galaxyatlas
 
+#MAGICKCONF = /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickCore-config
+
 CXX = g++
-CXX_FLAGS = --std=c++11 -Wall
+CXX_FLAGS = --std=c++11 -Wall -fopenmp
 INC = -I/usr/include/eigen3 -I/usr/include/ImageMagick-6 -I/usr/include/x86_64-linux-gnu/ImageMagick-6
-LDFLAGS = -pthread -lm -lMagick++-6.Q16
+LDFLAGS = -pthread -lm -lMagick++-6.Q16 -lMagickCore-6.Q16
 
 DEFINES = -DMAGICKCORE_QUANTUM_DEPTH=16 -DMAGICKCORE_HDRI_ENABLE=0
 
@@ -19,7 +21,7 @@ main:
 	$(CXX) $(CXX_FLAGS) -o $(EXEC_NAME) $(MAIN_SRC) $(INC) $(LDFLAGS) $(DEFINES)
 
 bruteforce:
-	$(CXX) $(CXX_FLAGS) -o bruteforce $(BRUTE_SRC) $(INC) $(LDFLAGS) $(DEFINES)
+	$(CXX) $(CXX_FLAGS) -o bruteforce $(BRUTE_SRC) $(DEFINES) $(INC) $(LDFLAGS)
 
 clean:
 	rm -f galaxyatlas bruteforce
