@@ -22,7 +22,7 @@ def ParseStar(row):
     declination = (float(dec_deg) +
                    float(dec_min) / 60 +
                    float(dec_sec) / 3600) * math.pi / 180
-    if parallax < 0.000001:
+    if parallax < 1e-7:
         return None, None, None, None, None, None, None, None
     parsecs = 1000.0 / parallax
     absolute_magnitude = apparent_magnitude - 5 * (math.log10(parsecs) - 1)

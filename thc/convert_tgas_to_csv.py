@@ -28,7 +28,7 @@ def ConvertStar(row):
     except:
         apparent_magnitude = float(30)
     parallax = float(row['parallax'])
-    if parallax <= 0:
+    if parallax < 1e-7:
         return None, None, None, None, None, None, None, None
     parsecs = 1000.0 / parallax
     absolute_magnitude = apparent_magnitude - 5 * (math.log10(parsecs) - 1)
