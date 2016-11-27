@@ -5,8 +5,10 @@ EXEC_NAME = galaxyatlas
 #MAGICKCONF = /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickCore-config
 
 CXX = g++
-CXX_FLAGS = --std=c++11 -Wall -fopenmp
-INC = -I/usr/include/eigen3 -I/usr/include/ImageMagick-6 -I/usr/include/x86_64-linux-gnu/ImageMagick-6
+CXX_FLAGS = --std=c++11 -Wall
+LINUX_INC = -I/usr/include/eigen3 -I/usr/include/ImageMagick-6 -I/usr/include/x86_64-linux-gnu/ImageMagick-6
+MAC_INC = -I/usr/local/Cellar/eigen/3.2.8/include/eigen3 -I/usr/local/Cellar/imagemagick/6.9.5-0/include/ImageMagick-6
+INC = $(LINUX_INC) $(MAC_INC)
 LDFLAGS = -pthread -lm -lMagick++-6.Q16 -lMagickCore-6.Q16
 
 DEFINES = -DMAGICKCORE_QUANTUM_DEPTH=16 -DMAGICKCORE_HDRI_ENABLE=0
