@@ -100,7 +100,9 @@ int main(int argc, char* argv[]) {
         tree.addStar(&(stars[i]));
     }
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
-    cout << "Done loading stars into tree." << endl;
+    duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+    cout << "Done loading stars into tree (" << time_span.count()
+         <<"s)." << endl;
 
     Vector3d cameraPosition(0, 0, 0);
     Vector3d cameraDirection(0, 1, 0);
@@ -109,10 +111,14 @@ int main(int argc, char* argv[]) {
     
     // Run a search for visible stars    
     cout << "Searching for visible stars..." << endl;
+    t1 = high_resolution_clock::now();
     vector<const StarTree*> searchList{&tree};
     vector<const Star*> foundStars;
-    visibleStars(cameraPosition, 0.000001, searchList, foundStars);
-    cout << "Found " << foundStars.size() << " visible stars." << endl;
+    visibleStarsMagic(cameraPosition, 0.004, 10, searchList, foundStars);
+    t2 = high_resolution_clock::now();
+    time_span = duration_cast<duration<double>>(t2 - t1);
+    cout << "Found " << foundStars.size() << " visible stars ("
+         << time_span.count() << "s)." << endl;
     
     cout << "Rendering image..." << endl;
     // Background image (black)
