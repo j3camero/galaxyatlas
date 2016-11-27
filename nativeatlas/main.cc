@@ -91,16 +91,33 @@ int main(int argc, char* argv[]) {
 
     cout << "Loading stars into tree..." << endl;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
+
+    // Calculate bounding box
+    double maxmax = fmax(maxx, maxy);
+    maxmax = fmax(maxmax, maxz);
+    Vector3d maxVec(maxmax + 1.0, maxmax + 1.0, maxmax + 1.0);
+
+    double minmin = fmin(minx, miny);
+    minmin = fmin(minmin, minz);
+    Vector3d minVec(minmin - 1.0, minmin - 1.0, minmin - 1.0);
+
+    if (maxVec.norm() > minVec.norm()) {
+        minVec = -1 * maxVec;
+    } else {
+        maxVec = -1 * minVec;
+    }
+    
     // Put all the stars into the octree
     StarTree tree(kMaxLeafSize, Vector3d::Zero(),
-                  Vector3d(minx - 1.0, miny - 1.0, minz - 1.0),
-                  Vector3d(maxx + 1.0, maxy + 1.0, maxz + 1.0));
+                  minVec,
+                  maxVec);
 
     for (unsigned int i = 0; i < stars.size(); i++) {
         tree.addStar(&(stars[i]));
     }
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
-    duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+    duration<double> time_span =
+        duration_cast<duration<double>>(t2 - t1);
     cout << "Done loading stars into tree (" << time_span.count()
          <<"s)." << endl;
 
@@ -109,12 +126,12 @@ int main(int argc, char* argv[]) {
     Vector3d upDirection(0, 0, 1);
     Vector3d right = cameraDirection.cross(upDirection);
     
-    // Run a search for visible stars    
+    // Run a search for visible stars
     cout << "Searching for visible stars..." << endl;
     t1 = high_resolution_clock::now();
     vector<const StarTree*> searchList{&tree};
     vector<const Star*> foundStars;
-    visibleStarsMagic(cameraPosition, 0.004, 10, searchList, foundStars);
+    visibleStars(cameraPosition, 0.1, searchList, foundStars);
     t2 = high_resolution_clock::now();
     time_span = duration_cast<duration<double>>(t2 - t1);
     cout << "Found " << foundStars.size() << " visible stars ("

@@ -228,7 +228,8 @@ void starsInRadius(const Vector3d& point, double radius,
                     }
                 }
             } else {
-                // If it's a branch, add all of the subnodes to be searched
+                // If it's a branch, add all of the subnodes to be
+                // searched
                 for (int i = 0; i < 8; i++) {
                     const StarTree* tmp =
                         t->branch(static_cast<TreeDirection>(i));
@@ -307,7 +308,7 @@ static bool canSeeStarMagic(const Vector3d& point, double minLum,
     const double starLuminosity = star->lum();
     const double magic =
         magicFormula(starDistance, blurRadius) * starLuminosity;
-
+    
     return magic >= minLum;
 }
 
