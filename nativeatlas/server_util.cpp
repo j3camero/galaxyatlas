@@ -32,8 +32,18 @@ void dflt_res_request_handler(HttpServer& server,
                               shared_ptr<HttpServer::Response> response,
                               shared_ptr<HttpServer::Request> request) {
     auto web_root_path = boost::filesystem::canonical("static");
+    boost::system::error_code ec;
     auto path =  boost::filesystem::canonical(web_root_path /
-                                              request->path);
+                                              request->path,
+                                              ec);
+    if (ec != boost::system::errc::success) {
+        string content = "Could not open path " +
+            request->path + ", file does not exist.";
+        *response << "HTTP/1.1 400 Bad Request\r\nContent-Length: "
+                  << content.length() << "\r\n\r\n" << content;
+        return;
+    }
+    
     //Check if path is within web_root_path
     if(distance(web_root_path.begin(), web_root_path.end()) >
        distance(path.begin(), path.end()) ||
@@ -48,9 +58,9 @@ void dflt_res_request_handler(HttpServer& server,
     // Check if they requested a directory
     if(boost::filesystem::is_directory(path))
         path/="index.html";
-    // Check if the file exists.
-    if(!(boost::filesystem::exists(path) &&
-         boost::filesystem::is_regular_file(path))) {
+    
+    // Check if the file is a normal file
+    if(!boost::filesystem::is_regular_file(path)) {
         string content = "Could not open path " +
             request->path + ", file does not exist.";
         *response << "HTTP/1.1 400 Bad Request\r\nContent-Length: "
