@@ -8,13 +8,13 @@ CXX = g++
 CXX_FLAGS = --std=c++11 -Wall
 LINUX_INC = -I/usr/include/eigen3 -I/usr/include/ImageMagick-6 -I/usr/include/x86_64-linux-gnu/ImageMagick-6
 MAC_INC = -I/usr/local/Cellar/eigen/3.2.8/include/eigen3 -I/usr/local/Cellar/imagemagick/6.9.5-0/include/ImageMagick-6
-INC = $(LINUX_INC) $(MAC_INC)
-LDFLAGS = -pthread -lm -lMagick++-6.Q16 -lMagickCore-6.Q16
+INC = $(LINUX_INC) $(MAC_INC) -I./Simple-Web-Server
+LDFLAGS = -pthread -lm -lMagick++-6.Q16 -lMagickCore-6.Q16 -lboost_system -lboost_thread -lboost_filesystem -lboost_date_time
 
 DEFINES = -DMAGICKCORE_QUANTUM_DEPTH=16 -DMAGICKCORE_HDRI_ENABLE=0
 
 COMMON_SRC = startree.cc
-MAIN_SRC = main.cc $(COMMON_SRC)
+MAIN_SRC = main.cc $(COMMON_SRC) server_util.cpp
 BRUTE_SRC = brute_force.cc $(COMMON_SRC)
 
 all: main
