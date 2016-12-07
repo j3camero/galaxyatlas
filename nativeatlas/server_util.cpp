@@ -1,6 +1,55 @@
+#include <iostream>
+#include <cassert>
+#include <chrono>
+#include <fstream>
+#include <memory>
+#include <cstring>
+
+#include <boost/filesystem.hpp>
+#include <json/json.h>
+
 #include "server_util.h"
 
 using namespace std;
+using namespace startree;
+
+void starsInRadiusHandler(HttpServer& server,
+                          shared_ptr<HttpServer::Response> response,
+                          shared_ptr<HttpServer::Request> request,
+                          const StarTree& tree) {
+    double radius, pointX, pointY, pointZ;
+    string content;
+    bool error = false;
+    string errorStr;
+
+    string valstring;
+    for (int i = 2; i < 6; i++) {
+        string pair = request->path_match[i];
+        int splitPoint = pair.find("=");
+        string fieldname = pair.substr(0, splitPoint);
+        valstring = pair.substr(splitPoint + 1);
+
+        if (fieldname == "radius") {
+            radius = atof(valstring.c_str());
+        } else if (fieldname == "pointX") {
+            pointX = atof(valstring.c_str());
+        } else if (fieldname == "pointY") {
+            pointY = atof(valstring.c_str());
+        } else if (fieldname == "pointZ") {
+            pointZ = atof(valstring.c_str());
+        }
+    }
+
+    vector<const StarTree*> searchList{&tree};
+    vector<const Star*> foundStars;
+    starsInRadius(Vector3d(pointX, pointY, pointZ), radius,
+                  searchList, foundStars);
+    
+    content = "Stars found: " + to_string(foundStars.size());
+    *response << "HTTP/1.1 200 OK\r\n"
+              << "Content-Length: " << content.length()
+              << "\r\n\r\n" << content;
+}
 
 void dflt_res_send(const HttpServer &server,
                    const shared_ptr<HttpServer::Response> &response,

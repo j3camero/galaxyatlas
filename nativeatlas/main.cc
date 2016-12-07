@@ -19,6 +19,8 @@ using namespace std;
 using namespace std::chrono;
 
 const uint32_t kMaxLeafSize = 8;
+const string kDataFileName = "data/hygdata_min3.csv";
+// const string kDataFileName = "data/thc.csv";
 
 // Signal handler sets this to false to stop the server
 volatile bool running = true;
@@ -38,8 +40,7 @@ int main(int argc, char* argv[]) {
     
     // Read CSV file and create Star objects
     cout << "Reading CSV file..." << endl;
-    io::CSVReader<8> star_reader("data/hygdata_min3.csv");
-    //io::CSVReader<8> star_reader("data/thc.csv");
+    io::CSVReader<8> star_reader(kDataFileName);
     
     uint64_t id = 0;
     string idstr;
@@ -101,17 +102,30 @@ int main(int argc, char* argv[]) {
     cout << "Done loading stars into tree (" << time_span.count()
          <<"s)." << endl;
 
-    // Start web server
+    // Create web server
     cout << "Staring web server..." << endl;
     HttpServer server(8080, 1);
 
-    // Serve the index page
+    // starsInRadius API
+    server.resource["^/starsInRadius[?]"
+                    "((radius=[^=&]*)|"
+                    "(pointX=[^=&]*)|"
+                    "(pointY=[^=&]*)|"
+                    "(pointZ=[^=&]*)|"
+                    "&)*"]["GET"] =
+        [&server,&tree](shared_ptr<HttpServer::Response> response,
+                        shared_ptr<HttpServer::Request> request) {
+        starsInRadiusHandler(server, response, request, tree);
+    };
+    
+    // Serve the static pages
     server.default_resource["GET"] =
         [&server](shared_ptr<HttpServer::Response> response,
                   shared_ptr<HttpServer::Request> request) {
         dflt_res_request_handler(server, response, request);
     };
 
+    // Start the webserver on another thread
     thread server_thread([&server]() {
             server.start();
         });

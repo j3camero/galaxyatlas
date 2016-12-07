@@ -1,19 +1,20 @@
 #ifndef SERVER_UTIL_H_
 #define SERVER_UTIL_H_
 
-#include <iostream>
-#include <cassert>
-#include <chrono>
-#include <fstream>
-#include <memory>
-
-#include <boost/filesystem.hpp>
-
 #include "server_http.hpp"
 
+#include "startree.h"
+
 using namespace std;
+using namespace startree;
 
 typedef SimpleWeb::Server<SimpleWeb::HTTP> HttpServer;
+
+// Handler for starsInRadius call
+void starsInRadiusHandler(HttpServer& server,
+                          shared_ptr<HttpServer::Response> response,
+                          shared_ptr<HttpServer::Request> request,
+                          const StarTree& tree);
 
 // Send a file (the open ifstream) as a response to an http request
 void dflt_res_send(const HttpServer &server,
