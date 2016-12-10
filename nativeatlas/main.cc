@@ -117,6 +117,18 @@ int main(int argc, char* argv[]) {
                         shared_ptr<HttpServer::Request> request) {
         starsInRadiusHandler(server, response, request, tree);
     };
+
+    // visibleStars API
+    server.resource["^/visibleStars[?]"
+                    "((minLum=[^=&]*)|"
+                    "(pointX=[^=&]*)|"
+                    "(pointY=[^=&]*)|"
+                    "(pointZ=[^=&]*)|"
+                    "&)*"]["GET"] =
+        [&server,&tree](shared_ptr<HttpServer::Response> response,
+                        shared_ptr<HttpServer::Request> request) {
+        visibleStarsHandler(server, response, request, tree);
+    };
     
     // Serve the static pages
     server.default_resource["GET"] =
