@@ -22,6 +22,12 @@ void visibleStarsHandler(HttpServer& server,
                          shared_ptr<HttpServer::Request> request,
                          const StarTree& tree);
 
+// Handler for starsInRadius call
+void visibleStarsMagicHandler(HttpServer& server,
+                              shared_ptr<HttpServer::Response> response,
+                              shared_ptr<HttpServer::Request> request,
+                              const StarTree& tree);
+
 // Send a file (the open ifstream) as a response to an http request
 void dflt_res_send(const HttpServer &server,
                    const shared_ptr<HttpServer::Response> &response,

@@ -129,6 +129,19 @@ int main(int argc, char* argv[]) {
                         shared_ptr<HttpServer::Request> request) {
         visibleStarsHandler(server, response, request, tree);
     };
+
+    // visibleStarsMagic API
+    server.resource["^/visibleStarsMagic[?]"
+                    "((minLum=[^=&]*)|"
+                    "(blurRad=[^=&]*)|"
+                    "(pointX=[^=&]*)|"
+                    "(pointY=[^=&]*)|"
+                    "(pointZ=[^=&]*)|"
+                    "&)*"]["GET"] =
+        [&server,&tree](shared_ptr<HttpServer::Response> response,
+                        shared_ptr<HttpServer::Request> request) {
+        visibleStarsMagicHandler(server, response, request, tree);
+    };
     
     // Serve the static pages
     server.default_resource["GET"] =

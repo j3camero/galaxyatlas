@@ -141,6 +141,73 @@ void visibleStarsHandler(HttpServer& server,
               << "\r\n\r\n" << jsonStream.str();
 }
 
+void visibleStarsMagicHandler(HttpServer& server,
+                              shared_ptr<HttpServer::Response> response,
+                              shared_ptr<HttpServer::Request> request,
+                              const StarTree& tree) {
+    //cout << "visibleStarsMagic called!" << endl;
+    double lum, blurRad, pointX, pointY, pointZ;
+    string content;
+
+    string valstring;
+    for (int i = 2; i < 7; i++) {
+        string pair = request->path_match[i];
+        int splitPoint = pair.find("=");
+        string fieldname = pair.substr(0, splitPoint);
+        valstring = pair.substr(splitPoint + 1);
+
+        if (fieldname == "minLum") {
+            lum = atof(valstring.c_str());
+        } else if (fieldname == "blurRad") {
+            blurRad = atof(valstring.c_str());
+        } else if (fieldname == "pointX") {
+            pointX = atof(valstring.c_str());
+        } else if (fieldname == "pointY") {
+            pointY = atof(valstring.c_str());
+        } else if (fieldname == "pointZ") {
+            pointZ = atof(valstring.c_str());
+        }
+    }
+    /*
+    cout << "lum: " << lum << endl;
+    cout << "blurRad: " << blurRad << endl;
+    cout << "x: " << pointX << endl;
+    cout << "y: " << pointY << endl;
+    cout << "z: " << pointZ << endl;
+    */
+    
+    vector<const StarTree*> searchList{&tree};
+    vector<const Star*> foundStars;
+    visibleStarsMagic(Vector3d(pointX, pointY, pointZ), lum, blurRad,
+                      searchList, foundStars);
+
+    //cout << "Star search complete" << endl;
+    
+    Json::Value root;
+    for (vector<const Star*>::iterator it = foundStars.begin();
+         it != foundStars.end();
+         ++it) {
+        const Star* pStar = *it;
+        Json::Value star(Json::objectValue);
+        star["sid"] = to_string(pStar->id());
+        star["x"] = to_string(pStar->position().x());
+        star["y"] = to_string(pStar->position().y());
+        star["z"] = to_string(pStar->position().z());
+        star["lum"] = to_string(pStar->lum());
+        star["r"] = to_string(pStar->color()[0]);
+        star["g"] = to_string(pStar->color()[1]);
+        star["b"] = to_string(pStar->color()[2]);
+        root.append(move(star));
+    }
+    //cout << "Done making JSON" << endl;
+
+    stringstream jsonStream;
+    jsonStream << root;
+    *response << "HTTP/1.1 200 OK\r\n"
+              << "Content-Length: " << jsonStream.str().length()
+              << "\r\n\r\n" << jsonStream.str();
+}
+
 void dflt_res_send(const HttpServer &server,
                    const shared_ptr<HttpServer::Response> &response,
                    const shared_ptr<ifstream> &ifs) {
