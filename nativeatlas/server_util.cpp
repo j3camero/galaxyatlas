@@ -194,9 +194,9 @@ void visibleStarsMagicHandler(HttpServer& server,
         star["y"] = to_string(pStar->position().y());
         star["z"] = to_string(pStar->position().z());
         star["lum"] = to_string(pStar->lum());
-        star["r"] = to_string(pStar->color()[0]);
-        star["g"] = to_string(pStar->color()[1]);
-        star["b"] = to_string(pStar->color()[2]);
+        star["r"] = to_string(static_cast<int>(pStar->color()[0]));
+        star["g"] = to_string(static_cast<int>(pStar->color()[1]));
+        star["b"] = to_string(static_cast<int>(pStar->color()[2]));
         root.append(move(star));
     }
     //cout << "Done making JSON" << endl;
