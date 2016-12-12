@@ -2,12 +2,14 @@
 #define STARTREE_H_
 
 #include <vector>
+#include <map>
 
 #include <Eigen/Dense>
 
 #include "star.h"
 
 using std::vector;
+using std::map;
 using Eigen::Vector3d;
 
 namespace startree {
@@ -37,9 +39,11 @@ public:
              Vector3d minBounds, Vector3d maxBounds);
 
     // Add a star to the tree
-    void addStar(const Star* star);
+    void addStar(const Star* star, map<uint64_t,
+                 const StarTree*>& treeMap);
 
     // Getters
+    uint64_t nodeId() const { return nodeId_; }
     bool isLeaf() const { return isLeaf_; }
     bool isRoot() const { return isRoot_; }
     const StarTree* parent() const { return parent_; }
@@ -65,12 +69,16 @@ public:
     // Get a TreeDirection from one point to another
     static TreeDirection getDirection(const Vector3d& from,
                                       const Vector3d& to);
+
 private:
     // Used when splitting nodes, has no valid bounds
     StarTree(uint64_t maxLeafSize, StarTree* parent);
     
     // Adjust this tree's metadata to account for a new star
     void addStarMetadata(const Star* star);
+
+    // This node's ID
+    uint64_t nodeId_;
     
     /* -- Children -- */
     bool isLeaf_; // Are we a leaf node?
@@ -135,6 +143,12 @@ void visibleStarsMagic(const Vector3d& point, double minLuminosity,
                        double blurRadius,
                        vector<const StarTree*>& searchList,
                        vector<const Star*>& starsFound);
+
+// Get all octants that match the magic formula
+void visibleOctantsMagic(const Vector3d& point, double minLuminosity,
+                         double blurRadius,
+                         vector<const StarTree*>& searchList,
+                         vector<uint64_t>& nodesFound);
 
 } // namespace StarTree
 

@@ -92,15 +92,18 @@ int main(int argc, char* argv[]) {
     StarTree tree(kMaxLeafSize, Vector3d::Zero(),
                   minVec,
                   maxVec);
+    map<uint64_t,const StarTree*> treeMap;
+    treeMap[0] = &tree;
 
     for (unsigned int i = 0; i < stars.size(); i++) {
-        tree.addStar(&(stars[i]));
+        tree.addStar(&(stars[i]), treeMap);
     }
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     duration<double> time_span =
         duration_cast<duration<double>>(t2 - t1);
     cout << "Done loading stars into tree (" << time_span.count()
          <<"s)." << endl;
+    cout << "Number of nodes: " << treeMap.size() << endl;
 
     // Create web server
     cout << "Staring web server..." << endl;
@@ -141,6 +144,26 @@ int main(int argc, char* argv[]) {
         [&server,&tree](shared_ptr<HttpServer::Response> response,
                         shared_ptr<HttpServer::Request> request) {
         visibleStarsMagicHandler(server, response, request, tree);
+    };
+
+    // visibleOctantsMagic API
+    server.resource["^/visibleOctantsMagic[?]"
+                    "((minLum=[^=&]*)|"
+                    "(blurRad=[^=&]*)|"
+                    "(pointX=[^=&]*)|"
+                    "(pointY=[^=&]*)|"
+                    "(pointZ=[^=&]*)|"
+                    "&)*"]["GET"] =
+        [&server,&tree](shared_ptr<HttpServer::Response> response,
+                        shared_ptr<HttpServer::Request> request) {
+        visibleOctantsMagicHandler(server, response, request, tree);
+    };
+
+    // getNodeStars API
+    server.resource["/getNodeStars"]["POST"] =
+        [&server,&treeMap](shared_ptr<HttpServer::Response> response,
+                           shared_ptr<HttpServer::Request> request) {
+        getNodeStarsHandler(server, response, request, treeMap);
     };
     
     // Serve the static pages

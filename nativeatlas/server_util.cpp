@@ -208,6 +208,112 @@ void visibleStarsMagicHandler(HttpServer& server,
               << "\r\n\r\n" << jsonStream.str();
 }
 
+void visibleOctantsMagicHandler(HttpServer& server,
+                                shared_ptr<HttpServer::Response> response,
+                                shared_ptr<HttpServer::Request> request,
+                                const StarTree& tree) {
+    //cout << "visibleOctantsMagic called!" << endl;
+    double lum, blurRad, pointX, pointY, pointZ;
+    string content;
+
+    string valstring;
+    for (int i = 2; i < 7; i++) {
+        string pair = request->path_match[i];
+        int splitPoint = pair.find("=");
+        string fieldname = pair.substr(0, splitPoint);
+        valstring = pair.substr(splitPoint + 1);
+
+        if (fieldname == "minLum") {
+            lum = atof(valstring.c_str());
+        } else if (fieldname == "blurRad") {
+            blurRad = atof(valstring.c_str());
+        } else if (fieldname == "pointX") {
+            pointX = atof(valstring.c_str());
+        } else if (fieldname == "pointY") {
+            pointY = atof(valstring.c_str());
+        } else if (fieldname == "pointZ") {
+            pointZ = atof(valstring.c_str());
+        }
+    }
+    /*
+    cout << "lum: " << lum << endl;
+    cout << "blurRad: " << blurRad << endl;
+    cout << "x: " << pointX << endl;
+    cout << "y: " << pointY << endl;
+    cout << "z: " << pointZ << endl;
+    */
+    
+    vector<const StarTree*> searchList{&tree};
+    vector<uint64_t> foundNodes;
+
+    visibleOctantsMagic(Vector3d(pointX, pointY, pointZ),
+                        lum, blurRad,
+                        searchList, foundNodes);
+
+    //cout << "Star search complete" << endl;
+    
+    Json::Value root;
+    for (vector<uint64_t>::iterator it = foundNodes.begin();
+         it != foundNodes.end();
+         ++it) {
+        root.append(Json::Value(static_cast<Json::Value::UInt64>(*it)));
+    }
+    //cout << "Done making JSON" << endl;
+
+    stringstream jsonStream;
+    jsonStream << root;
+    *response << "HTTP/1.1 200 OK\r\n"
+              << "Content-Length: " << jsonStream.str().length()
+              << "\r\n\r\n" << jsonStream.str();
+}
+
+void getNodeStarsHandler(HttpServer& server,
+                         shared_ptr<HttpServer::Response> response,
+                         shared_ptr<HttpServer::Request> request,
+                         const map<uint64_t,const StarTree*>& treeMap) {
+    cout << "getNodeStars called!" << endl;
+    string content = request->content.string();
+
+    size_t pos;
+    vector<uint64_t> getIndices;
+    while ((pos = content.find(',')) != string::npos) {
+        string indexStr = content.substr(0, pos);
+        getIndices.push_back(strtoul(indexStr.c_str(), NULL, 10));
+        content = content.substr(pos + 1);
+    }
+    getIndices.push_back(strtoul(content.c_str(), NULL, 10));
+    
+    Json::Value root;
+    for (vector<uint64_t>::iterator ix = getIndices.begin();
+         ix != getIndices.end(); ++ix) {
+        map<uint64_t,const StarTree*>::const_iterator t;
+        t = treeMap.find(*ix);
+        const vector<const Star*>& stars = (t->second)->stars();
+        for (vector<const Star*>::const_iterator it = stars.begin();
+             it != stars.end(); ++it) {
+            const Star* pStar = *it;
+            Json::Value star(Json::objectValue);
+            star["sid"] = to_string(pStar->id());
+            star["x"] = to_string(pStar->position().x());
+            star["y"] = to_string(pStar->position().y());
+            star["z"] = to_string(pStar->position().z());
+            star["lum"] = to_string(pStar->lum());
+            star["r"] = to_string(static_cast<int>(pStar->color()[0]));
+            star["g"] = to_string(static_cast<int>(pStar->color()[1]));
+            star["b"] = to_string(static_cast<int>(pStar->color()[2]));
+            root.append(move(star));
+        }
+    }
+
+    cout << "Done making JSON" << endl;
+
+    stringstream jsonStream;    
+    jsonStream << root;
+    *response << "HTTP/1.1 200 OK\r\n"
+              << "Content-Length: " << jsonStream.str().length()
+              << "\r\n\r\n" << jsonStream.str();
+}
+
 void dflt_res_send(const HttpServer &server,
                    const shared_ptr<HttpServer::Response> &response,
                    const shared_ptr<ifstream> &ifs) {
