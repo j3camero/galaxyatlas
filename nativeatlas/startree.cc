@@ -77,13 +77,15 @@ splitBounds(const Vector3d oldBounds[2], Vector3d newBounds[2],
     childSplit = 0.5 * (newBounds[0] + newBounds[1]);
 }
 
+// Static variable to generate node ID's (not threadsafe)
+static uint64_t nextNodeId = 1;
 StarTree::StarTree(uint64_t maxLeafSize, Vector3d splitPoint,
                    Vector3d minBounds, Vector3d maxBounds) :
+    nodeId_(0),
     isLeaf_(true),
     splitPoint_(splitPoint),
     branches_{nullptr, nullptr, nullptr, nullptr,
               nullptr, nullptr, nullptr, nullptr},
-
     isRoot_(true),
     parent_(nullptr),
     maxLeafSize_(maxLeafSize),
@@ -98,9 +100,10 @@ StarTree::StarTree(uint64_t maxLeafSize, Vector3d splitPoint,
     boundsRadius_(0) {}
 
 StarTree::StarTree(uint64_t maxLeafSize, StarTree* parent) :
+    nodeId_(nextNodeId++),
     isLeaf_(true),
     branches_{nullptr, nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr, nullptr},
+              nullptr, nullptr, nullptr, nullptr},
     isRoot_(false),
     parent_(parent),
     maxLeafSize_(maxLeafSize),
@@ -154,7 +157,8 @@ StarTree::addStarMetadata(const Star* star) {
 }
 
 void
-StarTree::addStar(const Star* star) {
+StarTree::addStar(const Star* star,
+                  map<uint64_t,const StarTree*>& treeMap) {
     TreeDirection dir;
     // Always add the metadata
     addStarMetadata(star);
@@ -171,17 +175,20 @@ StarTree::addStar(const Star* star) {
                 splitBounds(treeBounds_, branches_[i]->treeBounds_,
                             splitPoint_, branches_[i]->splitPoint_,
                             static_cast<TreeDirection>(i));
+                uint64_t nodeId = branches_[i]->nodeId();
+                assert(treeMap.find(nodeId) == treeMap.end());
+                treeMap[nodeId] = branches_[i];
             }
 
             // Add all the old stars
             for (vector<const Star*>::iterator it = stars_.begin();
                  it != stars_.end(); ++it) {
                 dir = getDirection(splitPoint_, (*it)->position());
-                branches_[dir]->addStar(*it);
+                branches_[dir]->addStar(*it, treeMap);
             }
             // And don't forget the new one
             dir = getDirection(splitPoint_, star->position());
-            branches_[dir]->addStar(star);
+            branches_[dir]->addStar(star, treeMap);
         } else {
             // Otherwise just add the star to the list
             stars_.push_back(star);
@@ -189,7 +196,7 @@ StarTree::addStar(const Star* star) {
     } else {
         // We're a branch, figure out the child that gets the star
         dir = getDirection(splitPoint_, star->position());
-        branches_[dir]->addStar(star);
+        branches_[dir]->addStar(star, treeMap);
     }
 }
 
@@ -343,6 +350,30 @@ void visibleStarsMagic(const Vector3d& point, double minLuminosity,
                         starsFound.push_back(t->stars()[i]);
                     }
                 }
+            } else {
+                for (int i = 0; i < 8; i++) {
+                    const StarTree* tmp =
+                        t->branch(static_cast<TreeDirection>(i));
+                    searchList.push_back(tmp);
+                }
+            }
+        }
+    }
+}
+
+void visibleOctantsMagic(const Vector3d& point, double minLuminosity,
+                         double blurRadius,
+                         vector<const StarTree*>& searchList,
+                         vector<uint64_t>& octantsFound) {
+    // Loop until the searchlist is empty
+    while (searchList.size() > 0) {
+        // Look at the first thing on the list
+        const StarTree* t = searchList[0];
+        searchList.erase(searchList.begin());
+        
+        if (hasVisibleStarsMagic(point, minLuminosity, blurRadius, t)) {
+            if (t->isLeaf()) {
+                octantsFound.push_back(t->nodeId());
             } else {
                 for (int i = 0; i < 8; i++) {
                     const StarTree* tmp =

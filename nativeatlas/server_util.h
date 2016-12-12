@@ -16,17 +16,29 @@ void starsInRadiusHandler(HttpServer& server,
                           shared_ptr<HttpServer::Request> request,
                           const StarTree& tree);
 
-// Handler for starsInRadius call
+// Handler for visibleStars call
 void visibleStarsHandler(HttpServer& server,
                          shared_ptr<HttpServer::Response> response,
                          shared_ptr<HttpServer::Request> request,
                          const StarTree& tree);
 
-// Handler for starsInRadius call
+// Handler for visibleStarsMagic call
 void visibleStarsMagicHandler(HttpServer& server,
                               shared_ptr<HttpServer::Response> response,
                               shared_ptr<HttpServer::Request> request,
                               const StarTree& tree);
+
+// Handler for visibleOctantsMagic call
+void visibleOctantsMagicHandler(HttpServer& server,
+                                shared_ptr<HttpServer::Response> response,
+                                shared_ptr<HttpServer::Request> request,
+                                const StarTree& tree);
+
+// Handler for getNodeStars call
+void getNodeStarsHandler(HttpServer& server,
+                         shared_ptr<HttpServer::Response> response,
+                         shared_ptr<HttpServer::Request> request,
+                         const map<uint64_t,const StarTree*>& treeMap);
 
 // Send a file (the open ifstream) as a response to an http request
 void dflt_res_send(const HttpServer &server,
