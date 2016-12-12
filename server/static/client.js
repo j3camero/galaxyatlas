@@ -128,8 +128,8 @@ function doOneFrame() {
 	cameraPosition.addInPlace(right.multiplyScalar(speed));
     }
     if (keys[38]) {
-	cameradirection = cameradirection.rotate(right, -turnrate);
-	updirection = updirection.rotate(right, -turnrate);
+	cameraDirection = cameraDirection.rotate(right, -turnRate);
+	upDirection = upDirection.rotate(right, -turnRate);
     }
     if (keys[40]) {
 	cameraDirection = cameraDirection.rotate(right, turnRate);
@@ -169,13 +169,11 @@ function doOneFrame() {
 	if (projected.y < 0.00001) {
 	    continue;
 	}
-	var sx = (canvas.width / 2) +
-            (canvas.width / 2) * projected.x / projected.y;
-	var sy = (canvas.height / 2) +
-            (canvas.width / 2) * projected.z / projected.y;
+	var sx = canvas.width / 2 + 300 * projected.x / projected.y;
+	var sy = canvas.height / 2 + 300 * projected.z / projected.y;
         if (sx < 0 || sx > canvas.width) continue;
         if (sy < 0 || sy > canvas.height) continue;
-	var brightness = 255 * star.lum / translated.squaredLength();
+	var brightness = 255 * star.lum / projected.squaredLength();
 	var color = {"r":star.r, "g":star.g, "b":star.b};
 	renderStar(context, sx, sy, brightness, color);
     }
