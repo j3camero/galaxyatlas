@@ -128,8 +128,8 @@ function doOneFrame() {
 	cameraPosition.addInPlace(right.multiplyScalar(speed));
     }
     if (keys[38]) {
-	cameradirection = cameradirection.rotate(right, -turnrate);
-	updirection = updirection.rotate(right, -turnrate);
+	cameraDirection = cameraDirection.rotate(right, -turnRate);
+	upDirection = upDirection.rotate(right, -turnRate);
     }
     if (keys[40]) {
 	cameraDirection = cameraDirection.rotate(right, turnRate);
