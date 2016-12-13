@@ -146,6 +146,18 @@ int main(int argc, char* argv[]) {
         visibleStarsMagicHandler(server, response, request, tree);
     };
 
+    // visibleOctants API
+    server.resource["^/visibleOctants[?]"
+                    "((minLum=[^=&]*)|"
+                    "(pointX=[^=&]*)|"
+                    "(pointY=[^=&]*)|"
+                    "(pointZ=[^=&]*)|"
+                    "&)*"]["GET"] =
+        [&server,&tree](shared_ptr<HttpServer::Response> response,
+                        shared_ptr<HttpServer::Request> request) {
+        visibleOctantsHandler(server, response, request, tree);
+    };
+    
     // visibleOctantsMagic API
     server.resource["^/visibleOctantsMagic[?]"
                     "((minLum=[^=&]*)|"

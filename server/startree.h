@@ -144,6 +144,11 @@ void visibleStarsMagic(const Vector3d& point, double minLuminosity,
                        vector<const StarTree*>& searchList,
                        vector<const Star*>& starsFound);
 
+// Get all octants with a star bright enough to see
+void visibleOctants(const Vector3d& point, double minLuminosity,
+                    vector<const StarTree*>& searchList,
+                    vector<uint64_t>& nodesFound);
+
 // Get all octants that match the magic formula
 void visibleOctantsMagic(const Vector3d& point, double minLuminosity,
                          double blurRadius,

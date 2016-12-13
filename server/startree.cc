@@ -361,6 +361,29 @@ void visibleStarsMagic(const Vector3d& point, double minLuminosity,
     }
 }
 
+void visibleOctants(const Vector3d& point, double minLuminosity,
+                    vector<const StarTree*>& searchList,
+                    vector<uint64_t>& octantsFound) {
+    // Loop until the searchlist is empty
+    while (searchList.size() > 0) {
+        // Look at the first thing on the list
+        const StarTree* t = searchList[0];
+        searchList.erase(searchList.begin());
+        
+        if (hasVisibleStars(point, minLuminosity, t)) {
+            if (t->isLeaf()) {
+                octantsFound.push_back(t->nodeId());
+            } else {
+                for (int i = 0; i < 8; i++) {
+                    const StarTree* tmp =
+                        t->branch(static_cast<TreeDirection>(i));
+                    searchList.push_back(tmp);
+                }
+            }
+        }
+    }
+}
+
 void visibleOctantsMagic(const Vector3d& point, double minLuminosity,
                          double blurRadius,
                          vector<const StarTree*>& searchList,

@@ -19,7 +19,6 @@ void starsInRadiusHandler(HttpServer& server,
                           const StarTree& tree) {
     //cout << "starsInRadius called!" << endl;
     double radius, pointX, pointY, pointZ;
-    string content;
 
     string valstring;
     for (int i = 2; i < 6; i++) {
@@ -83,7 +82,6 @@ void visibleStarsHandler(HttpServer& server,
                          const StarTree& tree) {
     //cout << "visibleStars called!" << endl;
     double lum, pointX, pointY, pointZ;
-    string content;
 
     string valstring;
     for (int i = 2; i < 6; i++) {
@@ -147,7 +145,6 @@ void visibleStarsMagicHandler(HttpServer& server,
                               const StarTree& tree) {
     //cout << "visibleStarsMagic called!" << endl;
     double lum, blurRad, pointX, pointY, pointZ;
-    string content;
 
     string valstring;
     for (int i = 2; i < 7; i++) {
@@ -208,13 +205,67 @@ void visibleStarsMagicHandler(HttpServer& server,
               << "\r\n\r\n" << jsonStream.str();
 }
 
+void visibleOctantsHandler(HttpServer& server,
+                           shared_ptr<HttpServer::Response> response,
+                           shared_ptr<HttpServer::Request> request,
+                           const StarTree& tree) {
+    //cout << "visibleOctants called!" << endl;
+    double lum, pointX, pointY, pointZ;
+
+    string valstring;
+    for (int i = 2; i < 7; i++) {
+        string pair = request->path_match[i];
+        int splitPoint = pair.find("=");
+        string fieldname = pair.substr(0, splitPoint);
+        valstring = pair.substr(splitPoint + 1);
+
+        if (fieldname == "minLum") {
+            lum = atof(valstring.c_str());
+        } else if (fieldname == "pointX") {
+            pointX = atof(valstring.c_str());
+        } else if (fieldname == "pointY") {
+            pointY = atof(valstring.c_str());
+        } else if (fieldname == "pointZ") {
+            pointZ = atof(valstring.c_str());
+        }
+    }
+    /*
+    cout << "lum: " << lum << endl;
+    cout << "x: " << pointX << endl;
+    cout << "y: " << pointY << endl;
+    cout << "z: " << pointZ << endl;
+    */
+    
+    vector<const StarTree*> searchList{&tree};
+    vector<uint64_t> foundNodes;
+
+    visibleOctants(Vector3d(pointX, pointY, pointZ),
+                   lum, searchList, foundNodes);
+
+    //cout << "Star search complete" << endl;
+    
+    Json::Value root;
+    for (vector<uint64_t>::iterator it = foundNodes.begin();
+         it != foundNodes.end();
+         ++it) {
+        root.append(Json::Value(static_cast<Json::Value::UInt64>(*it)));
+    }
+    //cout << "Done making JSON" << endl;
+    //cout << "----------" << endl;
+
+    stringstream jsonStream;
+    jsonStream << root;
+    *response << "HTTP/1.1 200 OK\r\n"
+              << "Content-Length: " << jsonStream.str().length()
+              << "\r\n\r\n" << jsonStream.str();
+}
+
 void visibleOctantsMagicHandler(HttpServer& server,
                                 shared_ptr<HttpServer::Response> response,
                                 shared_ptr<HttpServer::Request> request,
                                 const StarTree& tree) {
     //cout << "visibleOctantsMagic called!" << endl;
     double lum, blurRad, pointX, pointY, pointZ;
-    string content;
 
     string valstring;
     for (int i = 2; i < 7; i++) {
@@ -259,6 +310,7 @@ void visibleOctantsMagicHandler(HttpServer& server,
         root.append(Json::Value(static_cast<Json::Value::UInt64>(*it)));
     }
     //cout << "Done making JSON" << endl;
+    //cout << "----------" << endl;
 
     stringstream jsonStream;
     jsonStream << root;
@@ -271,7 +323,7 @@ void getNodeStarsHandler(HttpServer& server,
                          shared_ptr<HttpServer::Response> response,
                          shared_ptr<HttpServer::Request> request,
                          const map<uint64_t,const StarTree*>& treeMap) {
-    cout << "getNodeStars called!" << endl;
+    //cout << "getNodeStars called!" << endl;
     string content = request->content.string();
 
     size_t pos;
@@ -283,9 +335,10 @@ void getNodeStarsHandler(HttpServer& server,
     }
     getIndices.push_back(strtoul(content.c_str(), NULL, 10));
     
-    Json::Value root;
+    Json::Value root(Json::objectValue);
     for (vector<uint64_t>::iterator ix = getIndices.begin();
          ix != getIndices.end(); ++ix) {
+        Json::Value octantList;
         map<uint64_t,const StarTree*>::const_iterator t;
         t = treeMap.find(*ix);
         const vector<const Star*>& stars = (t->second)->stars();
@@ -301,11 +354,12 @@ void getNodeStarsHandler(HttpServer& server,
             star["r"] = to_string(static_cast<int>(pStar->color()[0]));
             star["g"] = to_string(static_cast<int>(pStar->color()[1]));
             star["b"] = to_string(static_cast<int>(pStar->color()[2]));
-            root.append(move(star));
+            octantList.append(move(star));
         }
+        root[to_string(*ix)] = move(octantList);
     }
 
-    cout << "Done making JSON" << endl;
+    //cout << "Done making JSON" << endl;
 
     stringstream jsonStream;    
     jsonStream << root;

@@ -3,7 +3,9 @@ var distUpdateThreshold = 2;
 var speed = 0.3;
 var turnRate = 0.03;
 
-var stars = [];
+var visibleOctants = [];
+var octantDict = {};
+
 var starsUpdated = false;
 var cameraPosition = new Vector(0, 0, 0);
 var lastUpdatePosition = new Vector(0, 0, 0);
@@ -159,26 +161,49 @@ function doOneFrame() {
     var context = canvas.getContext('2d');
     context.fillStyle = 'black';
     context.fillRect(0, 0, canvas.width, canvas.height);
-    for (var i = 0; i < stars.length; ++i) {
-	var star = stars[i];
-	var position = new Vector(star.x, star.y, star.z);
-	var translated = position.subtract(cameraPosition);
-	var projected = translated.basisProjection(right,
-						   cameraDirection,
-						   upDirection);
-	if (projected.y < 0.00001) {
-	    continue;
-	}
-	var sx = (canvas.width / 2) +
-            (canvas.width / 2) * projected.x / projected.y;
-	var sy = (canvas.height / 2) +
-            (canvas.width / 2) * projected.z / projected.y;
-        if (sx < 0 || sx > canvas.width) continue;
-        if (sy < 0 || sy > canvas.height) continue;
-	var brightness = 255 * star.lum / translated.squaredLength();
-	var color = {"r":star.r, "g":star.g, "b":star.b};
-	renderStar(context, sx, sy, brightness, color);
+
+    var starRenderCount = 0;
+    var starSkipCount = 0;
+    for (ix in visibleOctants) {
+        if (typeof octantDict[visibleOctants[ix]] == 'undefined') {
+            console.log("Undefined: " + visibleOctants[ix]);
+            continue;
+        }
+        var stars = octantDict[visibleOctants[ix]];
+        for (var i = 0; i < stars.length; ++i) {
+	    var star = stars[i];
+
+            var position = new Vector(star.x, star.y, star.z);
+	    var translated = position.subtract(cameraPosition);
+	    var brightness = star.lum /
+                (4 * Math.PI * translated.squaredLength());
+            if (brightness < 0.001) {
+                starSkipCount++;
+                continue;
+            }
+            var scaling = 255 * 8;
+            brightness *= scaling;
+            
+	    var projected = translated.basisProjection(right,
+						       cameraDirection,
+						       upDirection);
+	    if (projected.y < 0.00001) {
+	        continue;
+	    }
+	    var sx = (canvas.width / 2) +
+                (canvas.width / 2) * projected.x / projected.y;
+	    var sy = (canvas.height / 2) +
+                (canvas.width / 2) * projected.z / projected.y;
+            if (sx < 0 || sx > canvas.width) continue;
+            if (sy < 0 || sy > canvas.height) continue;
+
+	    var color = {"r":star.r, "g":star.g, "b":star.b};
+	    renderStar(context, sx, sy, brightness, color);
+            starRenderCount++;
+        }
     }
+    //console.log('Stars Rendered: ' + starRenderCount);
+    //console.log('Stars Skipped: ' + starSkipCount);
     setTimeout(doOneFrame, 10);
 };
 
@@ -195,10 +220,45 @@ function updateStars(force) {
     var x = cameraPosition.x;
     var y = cameraPosition.y;
     var z = cameraPosition.z;
-    getVisibleStarsMagic(0.004, 10, x, y, z, function(newStars) {
-	stars = newStars;
-        starsUpdated = true;
-	console.log('Loaded ' + newStars.length + ' stars.');
+    //console.log('x: ' + x + ' y: ' + y + ' z: ' + z);
+    getVisibleOctants(0.001, x, y, z, function(newOcts) {
+        // Use a temporary so we don't update with this before we
+        // actually have all thes tars.
+	var tmpVisibleOctants = newOcts;
+        // Create request for stars
+        var octRequests = [];
+        for (id in tmpVisibleOctants) {
+            if (!(tmpVisibleOctants[id] in octantDict)) {
+                octRequests.push(tmpVisibleOctants[id]);
+            }
+        }
+        //console.log(octRequests);
+        if (octRequests.length == 0) {
+            starsUpdated = true;
+            //console.log("Nothing new to download.");
+            return;
+        }
+        
+        getNodeStars(octRequests, function(newStars) {
+            for (ix in octRequests) {
+                if (!(typeof newStars[octRequests[ix]] !==
+                      'undefined')) {
+                    console.log("An octant we asked for is missing: " +
+                                octRequests[ix]);
+                }
+                if (octRequests[ix] in octantDict) {
+                    console.log("Aleady have that!" +
+                                octRequests[ix]);
+                }
+                octantDict[octRequests[ix]] =
+                    newStars[octRequests[ix]];
+            }
+            //console.log("Nodes: " + Object.keys(octantDict).length);
+            visibleOctants = tmpVisibleOctants;
+            starsUpdated = true;
+        }, function(error) {
+            console.log('Failure: ' + error);
+        });
     }, function(error) {
 	console.log('Failure: ' + error);
     });
