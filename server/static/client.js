@@ -6,6 +6,8 @@ var turnRate = 0.03;
 
 var visibleOctants = [];
 var octantDict = {};
+var starObjs = {};
+var starGroup = new THREE.Group();
 var starsUpdated = false;
 
 // Camera Position and Rotation
@@ -156,7 +158,8 @@ function doOneFrame() {
         camera.rotateOnAxis(up, -turnRate);
     }
     camera.updateProjectionMatrix();
-    
+
+    /*
     var starRenderCount = 0;
     var starSkipCount = 0;
     for (ix in visibleOctants) {
@@ -184,10 +187,14 @@ function doOneFrame() {
             starRenderCount++;
         }
     }
+    */
     //console.log('Stars Rendered: ' + starRenderCount);
     //console.log('Stars Skipped: ' + starSkipCount);
+    
     // Render the scene
-    renderer.render(scene, camera);
+    if (starsUpdated) {
+        renderer.render(scene, camera);
+    }
 };
 
 // Returns immediately, with callback later.
@@ -204,7 +211,6 @@ function updateStars(force) {
     var x = camera.position.x;
     var y = camera.position.y;
     var z = camera.position.z;
-    //console.log('x: ' + x + ' y: ' + y + ' z: ' + z);
     getVisibleOctants(minNearFieldLum, x, y, z, function(newOcts) {
         // Use a temporary so we don't update with this before we
         // actually have all thes tars.
@@ -216,10 +222,8 @@ function updateStars(force) {
                 octRequests.push(tmpVisibleOctants[id]);
             }
         }
-        //console.log(octRequests);
         if (octRequests.length == 0) {
             starsUpdated = true;
-            //console.log("Nothing new to download.");
             return;
         }
         
@@ -236,8 +240,32 @@ function updateStars(force) {
                 }
                 octantDict[octRequests[ix]] =
                     newStars[octRequests[ix]];
+
+                // Create meshes
+                for (starIndex in newStars[octRequests[ix]]) {
+                    var star = newStars[octRequests[ix]][starIndex];
+                    var starGeom = 
+                        new THREE.SphereGeometry( star.lum / 5000,
+                                                  10, // horiz segs
+                                                  10 // vert segs
+                                                );
+                    var starColor =
+                        new THREE.Color((star.r / 255.0),
+                                        (star.g / 255.0),
+                                        (star.b / 255.0));
+                    var starMat =
+                        new THREE.MeshBasicMaterial(
+                            {color: starColor.getHex()});
+                    starObjs[star.sid] =
+                        new THREE.Mesh(starGeom, starMat);
+                    var starPos = new THREE.Vector3(star.x,
+                                                    star.y,
+                                                    star.z);
+                    starObjs[star.sid].position.copy(starPos);
+
+                    scene.add( starObjs[star.sid] );
+                }
             }
-            //console.log("Nodes: " + Object.keys(octantDict).length);
             visibleOctants = tmpVisibleOctants;
             starsUpdated = true;
         }, function(error) {
@@ -265,21 +293,23 @@ function initRenderer() {
     document.body.appendChild(renderer.domElement);
 }
 
-var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-var cube = new THREE.Mesh( geometry, material );
+//var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+//var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+//var cube = new THREE.Mesh( geometry, material );
 
 window.onload = function() {
     initSceneAndCamera();
     initRenderer();
-    scene.add( cube );
+    //scene.add( cube );
     
     initKeys();
 
     updateStars(true);
     doOneFrame();
-    
+
+    /*
     setInterval(function() {
 	updateStars(false);
     }, 500);
+    */
 };
