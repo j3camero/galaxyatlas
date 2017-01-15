@@ -29,6 +29,12 @@ void visibleStarsMagicHandler(HttpServer& server,
                               const StarTree& tree);
 
 // Handler for visibleOctantsMagic call
+void visibleOctantsHandler(HttpServer& server,
+                           shared_ptr<HttpServer::Response> response,
+                           shared_ptr<HttpServer::Request> request,
+                           const StarTree& tree);
+
+// Handler for visibleOctantsMagic call
 void visibleOctantsMagicHandler(HttpServer& server,
                                 shared_ptr<HttpServer::Response> response,
                                 shared_ptr<HttpServer::Request> request,

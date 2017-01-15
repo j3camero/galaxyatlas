@@ -61,3 +61,67 @@ var getVisibleStarsMagic = function(minLum, blurRad, pointX, pointY, pointZ, onS
   }
   xhr.send(null);
 }
+
+var getVisibleOctants = function(minLum, pointX, pointY, pointZ, onSuccess, onError)
+{
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/visibleOctants' + '?minLum=' + encodeURIComponent(minLum) + '&pointX=' + encodeURIComponent(pointX) + '&pointY=' + encodeURIComponent(pointY) + '&pointZ=' + encodeURIComponent(pointZ), true);
+  xhr.setRequestHeader("Accept","application/json");
+  xhr.onreadystatechange = function (e) {
+    if (xhr.readyState == 4) {
+      if (xhr.status == 204 || xhr.status == 205) {
+        onSuccess();
+      } else if (xhr.status >= 200 && xhr.status < 300) {
+        var value = JSON.parse(xhr.responseText);
+        onSuccess(value);
+      } else {
+        var value = JSON.parse(xhr.responseText);
+        onError(value);
+      }
+    }
+  }
+  xhr.send(null);
+}
+
+var getVisibleOctantsMagic = function(minLum, blurRad, pointX, pointY, pointZ, onSuccess, onError)
+{
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/visibleOctantsMagic' + '?minLum=' + encodeURIComponent(minLum) + '&blurRad=' + encodeURIComponent(blurRad) + '&pointX=' + encodeURIComponent(pointX) + '&pointY=' + encodeURIComponent(pointY) + '&pointZ=' + encodeURIComponent(pointZ), true);
+  xhr.setRequestHeader("Accept","application/json");
+  xhr.onreadystatechange = function (e) {
+    if (xhr.readyState == 4) {
+      if (xhr.status == 204 || xhr.status == 205) {
+        onSuccess();
+      } else if (xhr.status >= 200 && xhr.status < 300) {
+        var value = JSON.parse(xhr.responseText);
+        onSuccess(value);
+      } else {
+        var value = JSON.parse(xhr.responseText);
+        onError(value);
+      }
+    }
+  }
+  xhr.send(null);
+}
+
+var getNodeStars = function(nodeIds, onSuccess, onError)
+{
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/getNodeStars', true);
+  xhr.setRequestHeader("Accept","application/json");
+  
+  xhr.onreadystatechange = function (e) {
+    if (xhr.readyState == 4) {
+      if (xhr.status == 204 || xhr.status == 205) {
+        onSuccess();
+      } else if (xhr.status >= 200 && xhr.status < 300) {
+        var value = JSON.parse(xhr.responseText);
+        onSuccess(value);
+      } else {
+        var value = JSON.parse(xhr.responseText);
+        onError(value);
+      }
+    }
+  }
+  xhr.send(nodeIds);
+}
