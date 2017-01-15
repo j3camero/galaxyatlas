@@ -19,8 +19,8 @@ using namespace std;
 using namespace std::chrono;
 
 const uint32_t kMaxLeafSize = 8;
-const string kDataFileName = "data/hygdata_min3.csv";
-// const string kDataFileName = "data/thc.csv";
+//const string kDataFileName = "data/hygdata_min3.csv";
+const string kDataFileName = "data/thc.csv";
 
 // Signal handler sets this to false to stop the server
 volatile bool running = true;
@@ -52,17 +52,17 @@ int main(int argc, char* argv[]) {
     double minx,miny,minz,maxx,maxy,maxz;
 
     vector<Star> stars;
-    //while(star_reader.read_row(idstr, x, y, z, absmag, r, g, b)) {
-    while(star_reader.read_row(id, x, y, z, lum, r, g, b)) {
+    while(star_reader.read_row(idstr, x, y, z, absmag, r, g, b)) {
+    //while(star_reader.read_row(id, x, y, z, lum, r, g, b)) {
         minx = min(x, minx);
         miny = min(y, miny);
         minz = min(z, minz);
         maxx = max(x, maxx);
         maxy = max(y, maxy);
         maxz = max(z, maxz);
-        //lum = exp(-0.4 * (absmag - 4.85));
-        //stars.push_back(Star(id++, x, y , z, lum, r, g, b));
-        stars.push_back(Star(id, x, y , z, lum, r, g, b));
+        lum = exp(-0.4 * (absmag - 4.85));
+        stars.push_back(Star(id++, x, y , z, lum, r, g, b));
+        //stars.push_back(Star(id, x, y , z, lum, r, g, b));
     }
     cout << "Min x: " << minx << " Min y: " << miny << " Min z: " << minz
          << endl

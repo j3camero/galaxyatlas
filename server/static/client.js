@@ -18,6 +18,7 @@ var draggingCanvas = false;
 var dragVector = {x: null, y: null};
 var pressForward = false;
 var activeDrag = false;
+var totalStarDownloadCount = 0;
 
 function initKeys() {
     for (var i = 0; i < 256; ++i) {
@@ -177,33 +178,40 @@ function doOneFrame() {
 	    var translated = position.subtract(cameraPosition);
 	    var brightness = star.lum /
                 (4 * Math.PI * translated.squaredLength());
+            var scaling = 255 * 64;
+            brightness *= scaling;
             if (brightness < 0.001) {
                 starSkipCount++;
                 continue;
             }
-            var scaling = 255 * 8;
-            brightness *= scaling;
             
 	    var projected = translated.basisProjection(right,
 						       cameraDirection,
 						       upDirection);
 	    if (projected.y < 0.00001) {
+                starSkipCount++;
 	        continue;
 	    }
+	    var fovMultiplier = 1.0 / 0.7;
 	    var sx = (canvas.width / 2) +
-                (canvas.width / 2) * projected.x / projected.y;
+                fovMultiplier * (canvas.width / 2) * projected.x / projected.y;
 	    var sy = (canvas.height / 2) +
-                (canvas.width / 2) * projected.z / projected.y;
-            if (sx < 0 || sx > canvas.width) continue;
-            if (sy < 0 || sy > canvas.height) continue;
+                fovMultiplier * (canvas.width / 2) * projected.z / projected.y;
+            if (sx < 0 || sx > canvas.width) {
+                starSkipCount++;
+		continue;
+	    }
+            if (sy < 0 || sy > canvas.height) {
+                starSkipCount++;
+		continue;
+	    }
 
 	    var color = {"r":star.r, "g":star.g, "b":star.b};
 	    renderStar(context, sx, sy, brightness, color);
             starRenderCount++;
         }
     }
-    //console.log('Stars Rendered: ' + starRenderCount);
-    //console.log('Stars Skipped: ' + starSkipCount);
+    console.log('rendered: ' + starRenderCount + ' skipped: ' + starSkipCount);
     setTimeout(doOneFrame, 10);
 };
 
@@ -221,7 +229,7 @@ function updateStars(force) {
     var y = cameraPosition.y;
     var z = cameraPosition.z;
     //console.log('x: ' + x + ' y: ' + y + ' z: ' + z);
-    getVisibleOctants(0.001, x, y, z, function(newOcts) {
+    getVisibleOctants(0.0001, x, y, z, function(newOcts) {
         // Use a temporary so we don't update with this before we
         // actually have all thes tars.
 	var tmpVisibleOctants = newOcts;
@@ -250,8 +258,11 @@ function updateStars(force) {
                     console.log("Aleady have that!" +
                                 octRequests[ix]);
                 }
-                octantDict[octRequests[ix]] =
-                    newStars[octRequests[ix]];
+                octantDict[octRequests[ix]] = newStars[octRequests[ix]];
+		totalStarDownloadCount += newStars[octRequests[ix]].length;
+		if (totalStarDownloadCount % 100 == 0) {
+		    console.log('total stars loaded:', totalStarDownloadCount);
+		}
             }
             //console.log("Nodes: " + Object.keys(octantDict).length);
             visibleOctants = tmpVisibleOctants;
