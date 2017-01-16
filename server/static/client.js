@@ -1,10 +1,13 @@
 // Constants
-var minNearFieldLum = 0.001;
+var numStarsFetched = 0;
+var minNearFieldLum = 0.005;
 var distUpdateThreshold = 2;
 var speed = 0.3;
 var turnRate = 0.03;
 
 var visibleOctants = [];
+var octantsToRemove = [];
+
 var octantDict = {};
 var starObjs = {};
 var starGroup = new THREE.Group();
@@ -159,42 +162,63 @@ function doOneFrame() {
     }
     camera.updateProjectionMatrix();
 
-    /*
-    var starRenderCount = 0;
-    var starSkipCount = 0;
-    for (ix in visibleOctants) {
-        if (typeof octantDict[visibleOctants[ix]] == 'undefined') {
-            console.log("Undefined: " + visibleOctants[ix]);
-            continue;
-        }
-        var stars = octantDict[visibleOctants[ix]];
-        for (var i = 0; i < stars.length; ++i) {
-	    var star = stars[i];
-
-            var position = new THREE.Vector3(star.x, star.y, star.z);
-	    var translated = new THREE.Vector3();
-            translated.subVectors(position, camera.position);
-            
-	    var brightness = star.lum /
-                (4 * Math.PI * translated.lengthSq());
-            if (brightness < minNearFieldLum) {
-                starSkipCount++;
-                continue;
-            }
-            
-	    var color = {"r":star.r, "g":star.g, "b":star.b};
-            // TODO: Render the star
-            starRenderCount++;
-        }
-    }
-    */
-    //console.log('Stars Rendered: ' + starRenderCount);
-    //console.log('Stars Skipped: ' + starSkipCount);
-    
-    // Render the scene
+    // Adjust the secene graph
     if (starsUpdated) {
-        renderer.render(scene, camera);
+        // Remove whole octants we know are invisible
+        var starsRemovedCount = 0;
+        for (idx in octantsToRemove) {
+            var octantId = octantsToRemove[idx];
+            for (starIdx in octantDict[octantId]) {
+                var star = starObjs[octantDict[octantId][starIdx]];
+                scene.remove(star.mesh);
+                starsRemovedCount++;
+            }
+        }
+        //console.log("Stars removed as whole octants: " +
+        //starsRemovedCount);
+        octantsToRemove = [];
+        
+        // Figure out what all should actually be visible
+        var visibleStarCount = 0;
+        for (idx in visibleOctants) {
+            var octantId = visibleOctants[idx];
+            for (starIdx in octantDict[octantId]) {
+                var star = starObjs[octantDict[octantId][starIdx]];
+                if (star.isVisible(camera.position, 0.005)) {
+                    // If the star is visible, check to see if it is
+                    // already in the scene graph. If so, it's mesh
+                    // refernce better match that stored in the star
+                    // object. If not, add it.
+                    visibleStarCount++;
+                    var meshRef = scene.getObjectById(star.mesh.id);
+                    if (typeof(meshRef) == 'undefined') {
+                        scene.add(star.mesh);
+                    } else {
+                        if (meshRef != star.mesh)
+                            throw "WTF!?";
+                    }
+                } else {
+                    // If the star is not visible, check to see if it
+                    // is still in the scene graph. If it is, remove it.
+                    var meshRef = scene.getObjectById(star.mesh.id);
+                    if (typeof(meshRef) != 'undefined') {
+                        scene.remove(meshRef);
+                    }
+                }
+            }
+        }
+        //console.log("Stars visible: " + visibleStarCount);
+
+        // Reset this to false
+        starsUpdated = false;
+        //console.log("Num objects: " + scene.children.length);
     }
+
+    // Render the scene
+    renderer.render(scene, camera);
+
+    // Update the stars if needed
+    updateStars(false);
 };
 
 // Returns immediately, with callback later.
@@ -211,10 +235,29 @@ function updateStars(force) {
     var x = camera.position.x;
     var y = camera.position.y;
     var z = camera.position.z;
+
+    numStarsFetched = 0;
     getVisibleOctants(minNearFieldLum, x, y, z, function(newOcts) {
         // Use a temporary so we don't update with this before we
-        // actually have all thes tars.
+        // actually have all the stars.
 	var tmpVisibleOctants = newOcts;
+
+        // Look for things to be removed from the scene.
+        for (ix in visibleOctants) {
+            var found = false;
+            var oldOctantId = visibleOctants[ix];
+            for (jx in tmpVisibleOctants) {
+                var newOctantId = tmpVisibleOctants[jx];
+                if (newOctantId == oldOctantId) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                octantsToRemove.push(oldOctantId);
+            }
+        }
+        
         // Create request for stars
         var octRequests = [];
         for (id in tmpVisibleOctants) {
@@ -223,6 +266,7 @@ function updateStars(force) {
             }
         }
         if (octRequests.length == 0) {
+            // No update required
             starsUpdated = true;
             return;
         }
@@ -238,36 +282,22 @@ function updateStars(force) {
                     console.log("Aleady have that!" +
                                 octRequests[ix]);
                 }
-                octantDict[octRequests[ix]] =
-                    newStars[octRequests[ix]];
+                octantDict[octRequests[ix]] = [];
 
-                // Create meshes
+                // Create star objects
                 for (starIndex in newStars[octRequests[ix]]) {
+                    numStarsFetched++;
                     var star = newStars[octRequests[ix]][starIndex];
-                    var starGeom = 
-                        new THREE.SphereGeometry( star.lum / 5000,
-                                                  10, // horiz segs
-                                                  10 // vert segs
-                                                );
-                    var starColor =
-                        new THREE.Color((star.r / 255.0),
-                                        (star.g / 255.0),
-                                        (star.b / 255.0));
-                    var starMat =
-                        new THREE.MeshBasicMaterial(
-                            {color: starColor.getHex()});
-                    starObjs[star.sid] =
-                        new THREE.Mesh(starGeom, starMat);
-                    var starPos = new THREE.Vector3(star.x,
-                                                    star.y,
-                                                    star.z);
-                    starObjs[star.sid].position.copy(starPos);
-
-                    scene.add( starObjs[star.sid] );
+                    octantDict[octRequests[ix]].push(star.sid);
+                    starObjs[star.sid] = new Star(star.sid,
+                                                  star.x, star.y, star.z,
+                                                  star.lum,
+                                                  star.r, star.g, star.b);
                 }
             }
             visibleOctants = tmpVisibleOctants;
             starsUpdated = true;
+            //console.log('Number of stars fetched: ' + numStarsFetched);
         }, function(error) {
             console.log('Failure: ' + error);
         });
