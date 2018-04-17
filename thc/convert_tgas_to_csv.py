@@ -2,23 +2,12 @@ import csv
 import math
 import sys
 
-# Load stars from the HYG catalog.
-hyg = {}
-with open('../abbreviator/data/hygdata_v3.csv') as hyg_file:
-    reader = csv.DictReader(hyg_file)
-    for row in reader:
-        hip = row['hip']
-        mag = float(row['mag'])
-        hyg[hip] = mag
-
 def ConvertStar(row):
     hip = row['hip']
     tyc = row['tycho2_id']
     designation = ''
     if hip:
         designation = 'HIP ' + hip
-        if hip in hyg:
-            del hyg[hip]
     elif tyc:
         designation = 'TYC ' + tyc
     right_ascension = float(row['ra']) * math.pi / 180
