@@ -1,0 +1,15 @@
+{
+  "name": "glowing-cube-demo",
+  "version": "1.0.0",
+  "description": "GLowing 3D cubes all up in your browser.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Jeff Cameron",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.3"
+  }
+}
